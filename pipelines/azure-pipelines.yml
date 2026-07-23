@@ -23,6 +23,6 @@ steps:
 
   - script: |
       terraform -version
-      terraform init -backend=false
+      terraform init
       terraform validate
     displayName: 'Validate Terraform'
