@@ -22,10 +22,9 @@ steps:
 
   # Validate Terraform
   - script: |
-      cd bootstrap
-      terraform init
+      terraform init -backend-config=bootstrap/backend.hcl
       terraform validate
-    displayName: 'Terraform Validate'
+      workingDirectory: $(System.DefaultWorkingDirectory)/bootstrap
 
   # Fetch Infracost auth token securely from Key Vault
   - task: AzureKeyVault@2
