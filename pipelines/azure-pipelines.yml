@@ -4,17 +4,13 @@ trigger:
       - main
       - develop
 
-pr:
-  branches:
-    include:
-      - main
-      - develop
-
 pool:
   vmImage: ubuntu-latest
 
 variables:
   terraformVersion: '1.15.8'
+  keyVaultName: 'kv-ht-boot-cin-01'
+  secretName: 'INFRACOST-API-KEY'
 
 steps:
   - task: TerraformInstaller@1
@@ -22,7 +18,25 @@ steps:
       terraformVersion: '$(terraformVersion)'
 
   - script: |
-      terraform -version
       terraform init
       terraform validate
-    displayName: 'Validate Terraform'
+    displayName: 'Terraform Validate'
+
+  # Fetch Infracost API key securely from Key Vault
+  - task: AzureKeyVault@2
+    inputs:
+      azureSubscription: 'bootstrap'
+      KeyVaultName: '$(keyVaultName)'
+      SecretsFilter: '$(secretName)'
+
+  - script: |
+      curl -fsSL https://raw.githubusercontent.com/infracost/infracost/master/scripts/install.sh | sh
+      infracost breakdown --path . \
+        --api-key $(INFRACOST-API-KEY) \
+        --format table
+    displayName: 'Infracost Estimate'
+
+  # Apply only on main branch
+  - script: |
+      terraform apply -auto-approve
+    displayName: 'Terraform Apply'
