@@ -63,7 +63,6 @@ steps:
 
 # Apply only on main
 - task: AzureCLI@2
-  condition: eq(variables['Build.SourceBranch'], 'refs/heads/main')
   inputs:
     azureSubscription: 'bootstrap'
     scriptType: bash
