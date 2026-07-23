@@ -21,11 +21,11 @@ steps:
   inputs:
     terraformVersion: '$(terraformVersion)'
 
-# Terraform init + validate (always runs)
+# Terraform init + validate
 - script: |
     terraform init -backend-config=bootstrap/backend.hcl
     terraform validate
-  displayName: 'Terraform Validate'
+  displayName: 'Terraform Init & Validate'
   workingDirectory: $(System.DefaultWorkingDirectory)/bootstrap
 
 # Fetch Infracost token securely from Key Vault
@@ -35,12 +35,12 @@ steps:
     KeyVaultName: '$(keyVaultName)'
     SecretsFilter: '$(secretName)'
 
-# Infracost estimate
+# Infracost estimate (plan + cost scan)
 - script: |
     curl -fsSL https://raw.githubusercontent.com/infracost/infracost/master/scripts/install.sh | sh
     terraform plan -out tfplan.binary
     terraform show -json tfplan.binary > plan.json
-    infracost scan --path plan.json \
+    infracost breakdown --path plan.json \
       --api-key $(INFRACOST_CLI_AUTHENTICATION_TOKEN) \
       --format table
   displayName: 'Infracost Estimate'
@@ -48,6 +48,7 @@ steps:
 
 # Apply only on main branch
 - script: |
-    terraform apply -auto-approve
+    terraform apply -auto-approve tfplan.binary
   displayName: 'Terraform Apply'
+  condition: eq(variables['Build.SourceBranch'], 'refs/heads/main')
   workingDirectory: $(System.DefaultWorkingDirectory)/bootstrap
