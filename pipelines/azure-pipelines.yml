@@ -10,7 +10,7 @@ pool:
 variables:
   terraformVersion: '1.15.8'
   keyVaultName: 'kv-ht-boot-cin-01'
-  secretName: 'INFRACOST_CLI_AUTHENTICATION_TOKEN'
+  secretName: 'INFRACOST-API-KEY'
 
 steps:
 - checkout: self
