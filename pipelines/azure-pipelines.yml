@@ -13,6 +13,7 @@ variables:
   secretName: 'INFRACOST_CLI_AUTHENTICATION_TOKEN'
 
 steps:
+# Checkout repo
 - checkout: self
 
 # Install Terraform
@@ -20,38 +21,55 @@ steps:
   inputs:
     terraformVersion: '$(terraformVersion)'
 
-# Clean cache
-- script: rm -rf .terraform .terraform.lock.hcl
-  displayName: 'Clean Terraform cache'
-  workingDirectory: $(System.DefaultWorkingDirectory)/bootstrap
-
-# Init + validate
+# Clean cache to avoid stale providers
 - script: |
-    terraform init -backend-config=backend.hcl
-    terraform validate
-  displayName: 'Terraform Init & Validate'
-  workingDirectory: $(System.DefaultWorkingDirectory)/bootstrap
+    cd bootstrap
+    rm -rf .terraform .terraform.lock.hcl
+  displayName: 'Clean Terraform cache'
 
-# Fetch Infracost token
+# Authenticate to Azure and run init/validate
+- task: AzureCLI@2
+  inputs:
+    azureSubscription: 'bootstrap'   # Service connection name
+    scriptType: bash
+    scriptLocation: inlineScript
+    inlineScript: |
+      cd bootstrap
+      terraform init -backend-config=backend.hcl
+      terraform validate
+  displayName: 'Terraform Init & Validate'
+
+# Fetch Infracost token securely from Key Vault
 - task: AzureKeyVault@2
   inputs:
     azureSubscription: 'bootstrap'
     KeyVaultName: '$(keyVaultName)'
     SecretsFilter: '$(secretName)'
 
-# Infracost estimate
-- script: |
-    curl -fsSL https://raw.githubusercontent.com/infracost/infracost/master/scripts/install.sh | sh
-    terraform plan -out tfplan.binary
-    terraform show -json tfplan.binary > plan.json
-    infracost breakdown --path plan.json \
-      --api-key $(INFRACOST_CLI_AUTHENTICATION_TOKEN) \
-      --format table
+# Infracost estimate (plan + cost scan)
+- task: AzureCLI@2
+  inputs:
+    azureSubscription: 'bootstrap'
+    scriptType: bash
+    scriptLocation: inlineScript
+    inlineScript: |
+      cd bootstrap
+      curl -fsSL https://raw.githubusercontent.com/infracost/infracost/master/scripts/install.sh | sh
+      terraform plan -out tfplan.binary
+      terraform show -json tfplan.binary > plan.json
+      infracost breakdown --path plan.json \
+        --api-key $(INFRACOST_CLI_AUTHENTICATION_TOKEN) \
+        --format table
   displayName: 'Infracost Estimate'
-  workingDirectory: $(System.DefaultWorkingDirectory)/bootstrap
 
-# Apply only on main
-- script: terraform apply -auto-approve tfplan.binary
-  displayName: 'Terraform Apply'
+# Apply only on main branch
+- task: AzureCLI@2
   condition: eq(variables['Build.SourceBranch'], 'refs/heads/main')
-  workingDirectory: $(System.DefaultWorkingDirectory)/bootstrap
+  inputs:
+    azureSubscription: 'bootstrap'
+    scriptType: bash
+    scriptLocation: inlineScript
+    inlineScript: |
+      cd bootstrap
+      terraform apply -auto-approve tfplan.binary
+  displayName: 'Terraform Apply'
