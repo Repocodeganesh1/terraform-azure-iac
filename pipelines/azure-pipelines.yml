@@ -13,40 +13,41 @@ variables:
   secretName: 'INFRACOST_CLI_AUTHENTICATION_TOKEN'
 
 steps:
-  - checkout: self
+# Checkout repo
+- checkout: self
 
-  # Install Terraform
-  - task: TerraformInstaller@1
-    inputs:
-      terraformVersion: '$(terraformVersion)'
+# Install Terraform
+- task: TerraformInstaller@1
+  inputs:
+    terraformVersion: '$(terraformVersion)'
 
-  # Validate Terraform
-  - script: |
-      terraform init -backend-config=bootstrap/backend.hcl
-      terraform validate
-      workingDirectory: $(System.DefaultWorkingDirectory)/bootstrap
+# Terraform init + validate (always runs)
+- script: |
+    terraform init -backend-config=bootstrap/backend.hcl
+    terraform validate
+  displayName: 'Terraform Validate'
+  workingDirectory: $(System.DefaultWorkingDirectory)/bootstrap
 
-  # Fetch Infracost auth token securely from Key Vault
-  - task: AzureKeyVault@2
-    inputs:
-      azureSubscription: 'bootstrap'
-      KeyVaultName: '$(keyVaultName)'
-      SecretsFilter: '$(secretName)'
+# Fetch Infracost token securely from Key Vault
+- task: AzureKeyVault@2
+  inputs:
+    azureSubscription: 'bootstrap'
+    KeyVaultName: '$(keyVaultName)'
+    SecretsFilter: '$(secretName)'
 
-  # Install Infracost and run cost estimation
-  - script: |
-      cd bootstrap
-      curl -fsSL https://raw.githubusercontent.com/infracost/cli/master/scripts/install.sh | sh
-      terraform plan -out tfplan.binary
-      terraform show -json tfplan.binary > plan.json
-      infracost scan --path plan.json \
-        --api-key $(INFRACOST_CLI_AUTHENTICATION_TOKEN) \
-        --format table
-    displayName: 'Infracost Estimate'
+# Infracost estimate
+- script: |
+    curl -fsSL https://raw.githubusercontent.com/infracost/infracost/master/scripts/install.sh | sh
+    terraform plan -out tfplan.binary
+    terraform show -json tfplan.binary > plan.json
+    infracost scan --path plan.json \
+      --api-key $(INFRACOST_CLI_AUTHENTICATION_TOKEN) \
+      --format table
+  displayName: 'Infracost Estimate'
+  workingDirectory: $(System.DefaultWorkingDirectory)/bootstrap
 
-  # Apply only on main branch
-  - script: |
-      cd bootstrap
-      terraform apply -auto-approve
-    displayName: 'Terraform Apply'
-    condition: eq(variables['Build.SourceBranch'], 'refs/heads/main')
+# Apply only on main branch
+- script: |
+    terraform apply -auto-approve
+  displayName: 'Terraform Apply'
+  workingDirectory: $(System.DefaultWorkingDirectory)/bootstrap
