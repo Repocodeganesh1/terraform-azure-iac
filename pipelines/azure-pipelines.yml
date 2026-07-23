@@ -13,7 +13,6 @@ variables:
   secretName: 'INFRACOST_CLI_AUTHENTICATION_TOKEN'
 
 steps:
-# Checkout repo
 - checkout: self
 
 # Install Terraform
@@ -21,21 +20,26 @@ steps:
   inputs:
     terraformVersion: '$(terraformVersion)'
 
-# Terraform init + validate
+# Clean cache
+- script: rm -rf .terraform .terraform.lock.hcl
+  displayName: 'Clean Terraform cache'
+  workingDirectory: $(System.DefaultWorkingDirectory)/bootstrap
+
+# Init + validate
 - script: |
-    terraform init -backend-config=bootstrap/backend.hcl
+    terraform init -backend-config=backend.hcl
     terraform validate
   displayName: 'Terraform Init & Validate'
   workingDirectory: $(System.DefaultWorkingDirectory)/bootstrap
 
-# Fetch Infracost token securely from Key Vault
+# Fetch Infracost token
 - task: AzureKeyVault@2
   inputs:
     azureSubscription: 'bootstrap'
     KeyVaultName: '$(keyVaultName)'
     SecretsFilter: '$(secretName)'
 
-# Infracost estimate (plan + cost scan)
+# Infracost estimate
 - script: |
     curl -fsSL https://raw.githubusercontent.com/infracost/infracost/master/scripts/install.sh | sh
     terraform plan -out tfplan.binary
@@ -46,9 +50,8 @@ steps:
   displayName: 'Infracost Estimate'
   workingDirectory: $(System.DefaultWorkingDirectory)/bootstrap
 
-# Apply only on main branch
-- script: |
-    terraform apply -auto-approve tfplan.binary
+# Apply only on main
+- script: terraform apply -auto-approve tfplan.binary
   displayName: 'Terraform Apply'
   condition: eq(variables['Build.SourceBranch'], 'refs/heads/main')
   workingDirectory: $(System.DefaultWorkingDirectory)/bootstrap
