@@ -3,6 +3,7 @@ trigger:
     include:
       - main
       - develop
+      - feature/*
 
 pool:
   vmImage: ubuntu-latest
@@ -12,31 +13,49 @@ variables:
   keyVaultName: 'kv-ht-boot-cin-01'
   secretName: 'INFRACOST-API-KEY'
 
-steps:
-  - task: TerraformInstaller@1
-    inputs:
-      terraformVersion: '$(terraformVersion)'
+stages:
+  - stage: CI
+    jobs:
+      - job: ValidateAndCost
+        steps:
+          # Install Terraform
+          - task: TerraformInstaller@1
+            inputs:
+              terraformVersion: '$(terraformVersion)'
 
-  - script: |
-      terraform init
-      terraform validate
-    displayName: 'Terraform Validate'
+          # Validate Terraform
+          - script: |
+              terraform init
+              terraform validate
+            displayName: 'Terraform Validate'
 
-  # Fetch Infracost API key securely from Key Vault
-  - task: AzureKeyVault@2
-    inputs:
-      azureSubscription: 'bootstrap'
-      KeyVaultName: '$(keyVaultName)'
-      SecretsFilter: '$(secretName)'
+          # Fetch Infracost API key securely from Key Vault
+          - task: AzureKeyVault@2
+            inputs:
+              azureSubscription: 'bootstrap'
+              KeyVaultName: '$(keyVaultName)'
+              SecretsFilter: '$(secretName)'
 
-  - script: |
-      curl -fsSL https://raw.githubusercontent.com/infracost/infracost/master/scripts/install.sh | sh
-      infracost breakdown --path . \
-        --api-key $(INFRACOST-API-KEY) \
-        --format table
-    displayName: 'Infracost Estimate'
+          # Install latest Infracost
+          - script: |
+              curl -fsSL https://raw.githubusercontent.com/infracost/cli/master/scripts/install.sh | sh
+              terraform plan -out tfplan.binary
+              terraform show -json tfplan.binary > plan.json
+              infracost breakdown --path plan.json \
+                --api-key $(INFRACOST-API-KEY) \
+                --format table
+            displayName: 'Infracost Estimate'
 
-  # Apply only on main branch
-  - script: |
-      terraform apply -auto-approve
-    displayName: 'Terraform Apply'
+  - stage: CD
+    condition: eq(variables['Build.SourceBranch'], 'refs/heads/develop')
+    jobs:
+      - job: ApplyInfra
+        steps:
+          - task: TerraformInstaller@1
+            inputs:
+              terraformVersion: '$(terraformVersion)'
+
+          - script: |
+              terraform init
+              terraform apply -auto-approve
+            displayName: 'Terraform Apply'
