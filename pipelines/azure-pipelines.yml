@@ -13,7 +13,6 @@ variables:
   secretName: 'INFRACOST_CLI_AUTHENTICATION_TOKEN'
 
 steps:
-# Checkout repo
 - checkout: self
 
 # Install Terraform
@@ -21,16 +20,16 @@ steps:
   inputs:
     terraformVersion: '$(terraformVersion)'
 
-# Clean cache to avoid stale providers
+# Clean cache
 - script: |
     cd bootstrap
     rm -rf .terraform .terraform.lock.hcl
   displayName: 'Clean Terraform cache'
 
-# Authenticate to Azure and run init/validate
+# Init + validate with Azure auth
 - task: AzureCLI@2
   inputs:
-    azureSubscription: 'bootstrap'   # Service connection name
+    azureSubscription: 'bootstrap'
     scriptType: bash
     scriptLocation: inlineScript
     inlineScript: |
@@ -39,14 +38,14 @@ steps:
       terraform validate
   displayName: 'Terraform Init & Validate'
 
-# Fetch Infracost token securely from Key Vault
+# Fetch Infracost token
 - task: AzureKeyVault@2
   inputs:
     azureSubscription: 'bootstrap'
     KeyVaultName: '$(keyVaultName)'
     SecretsFilter: '$(secretName)'
 
-# Infracost estimate (plan + cost scan)
+# Infracost estimate
 - task: AzureCLI@2
   inputs:
     azureSubscription: 'bootstrap'
@@ -62,7 +61,7 @@ steps:
         --format table
   displayName: 'Infracost Estimate'
 
-# Apply only on main branch
+# Apply only on main
 - task: AzureCLI@2
   condition: eq(variables['Build.SourceBranch'], 'refs/heads/main')
   inputs:
