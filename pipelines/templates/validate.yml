@@ -50,7 +50,10 @@ stages:
         scriptLocation: inlineScript
         workingDirectory: ${{ parameters.workingDirectory }}
         inlineScript: |
-          terraform init -input=false
+          terraform init \
+            -reconfigure \
+            -backend-config=backend.hcl \
+            -input=false
 
     - script: terraform fmt -check -recursive
       displayName: Terraform Format Check
