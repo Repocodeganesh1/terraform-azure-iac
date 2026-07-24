@@ -89,16 +89,17 @@ stages:
       workingDirectory: ${{ parameters.workingDirectory }}
 
     - script: |
-        curl -fsSL https://raw.githubusercontent.com/infracost/infracost/master/scripts/install.sh | sh
+        curl -fsSL https://raw.githubusercontent.com/infracost/cli/master/scripts/install.sh | sh
+        infracost --version
       displayName: Install Infracost
+      continueOnError: true
 
     - script: |
         infracost breakdown \
           --path plan.json \
-          --format table
+          --format table || echo "Infracost estimate failed; continuing without blocking Terraform plan artifacts."
       displayName: Infracost Cost Estimate
       workingDirectory: ${{ parameters.workingDirectory }}
-      continueOnError: true
       env:
         INFRACOST_API_KEY: $(${{ parameters.infracostSecretName }})
 
