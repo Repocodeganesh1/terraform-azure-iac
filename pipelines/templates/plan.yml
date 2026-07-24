@@ -93,6 +93,15 @@ stages:
         infracost --version
       displayName: Install Infracost
       continueOnError: true
+    - script: |
+        if [ -z "$INFRACOST_CLI_AUTHENTICATION_TOKEN" ]; then
+          echo "Token is empty"
+        else
+          echo "Token length: ${#INFRACOST_CLI_AUTHENTICATION_TOKEN}"
+        fi
+      displayName: Debug Infracost Token
+      env:
+        INFRACOST_CLI_AUTHENTICATION_TOKEN: $(INFRACOST-API-KEY)
 
     - script: |
         infracost scan plan.json || echo "Infracost estimate failed; continuing without blocking Terraform plan artifacts."
