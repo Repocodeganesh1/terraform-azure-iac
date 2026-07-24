@@ -71,12 +71,17 @@ stages:
         SecretsFilter: ${{ parameters.infracostSecretName }}
         RunAsPreJob: false
 
-    - script: |
-        terraform plan \
-          -lock=true \
-          -out=tfplan.binary
+    - task: AzureCLI@2
       displayName: Terraform Plan
-      workingDirectory: ${{ parameters.workingDirectory }}
+      inputs:
+        azureSubscription: ${{ parameters.azureServiceConnection }}
+        scriptType: bash
+        scriptLocation: inlineScript
+        workingDirectory: ${{ parameters.workingDirectory }}
+        inlineScript: |
+          terraform plan \
+            -lock=true \
+            -out=tfplan.binary
 
     - script: |
         terraform show -json tfplan.binary > plan.json

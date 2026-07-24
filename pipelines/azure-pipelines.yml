@@ -4,10 +4,7 @@ trigger:
       - develop
       - main
 
-pr:
-  branches:
-    include:
-      - main
+pr: none
 
 variables:
   - name: terraformVersion
