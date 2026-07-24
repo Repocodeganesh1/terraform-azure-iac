@@ -58,7 +58,7 @@ stages:
         scriptLocation: inlineScript
         workingDirectory: ${{ parameters.workingDirectory }}
         inlineScript: |
-          terraform init -backend-config=backend.hcl -input=false
+          terraform init
 
     - task: AzureKeyVault@2
       displayName: Retrieve Secrets
