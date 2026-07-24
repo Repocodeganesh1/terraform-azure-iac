@@ -17,7 +17,7 @@ resource "azurerm_key_vault" "this" {
   sku_name                      = var.sku_name
   rbac_authorization_enabled    = var.enable_rbac_authorization
   public_network_access_enabled = var.public_network_access_enabled
-  soft_delete_retention_days   = var.soft_delete_retention_days
+  soft_delete_retention_days    = var.soft_delete_retention_days
   purge_protection_enabled      = var.purge_protection_enabled
   tags                          = var.tags
 

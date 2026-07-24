@@ -1,6 +1,7 @@
 trigger:
   branches:
     include:
+      - develop
       - main
 
 pr:
@@ -10,7 +11,7 @@ pr:
 
 variables:
   - name: terraformVersion
-    value: 'v1.15.8'
+    value: '1.15.8'
 
   - name: azureServiceConnection
     value: 'bootstrap'
