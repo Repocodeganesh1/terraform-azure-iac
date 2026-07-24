@@ -49,6 +49,7 @@ stages:
         EOF
       displayName: Configure Terraform Plugin Cache
 
+
     - task: AzureCLI@2
       displayName: Terraform Init
       inputs:
@@ -57,7 +58,23 @@ stages:
         scriptLocation: inlineScript
         workingDirectory: ${{ parameters.workingDirectory }}
         inlineScript: |
-          terraform init -backend-config=backend.hcl -input=false
+          echo "========== PWD =========="
+          pwd
+
+          echo "========== FILES =========="
+          ls -la
+
+          echo "========== BACKEND.HCL =========="
+          cat backend.hcl
+
+          echo "========== TERRAFORM VERSION =========="
+          terraform version
+
+          echo "========== INIT =========="
+          terraform init \
+            -reconfigure \
+            -backend-config="$(pwd)/backend.hcl" \
+            -input=false
 
     - task: AzureKeyVault@2
       displayName: Retrieve Secrets

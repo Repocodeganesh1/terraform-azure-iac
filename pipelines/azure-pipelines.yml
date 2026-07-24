@@ -8,7 +8,6 @@ pr:
   branches:
     include:
       - main
-      - develop
 
 variables:
   - name: terraformVersion
