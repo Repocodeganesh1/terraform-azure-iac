@@ -89,7 +89,7 @@ stages:
       workingDirectory: ${{ parameters.workingDirectory }}
 
     - script: |
-        curl -fsSL https://raw.githubusercontent.com/infracost/cli/master/scripts/install.sh | sh
+        curl -fsSL https://raw.githubusercontent.com/infracost/cli/master/scripts/install.sh | sh -s -- -v latest
         infracost --version
       displayName: Install Infracost
       continueOnError: true
