@@ -41,7 +41,7 @@ resource "azurerm_storage_container" "tfstate" {
 }
 
 module "key_vault" {
-  source = "../modules/key_vault"
+  source = "../../modules/key_vault"
   name                        = var.key_vault_name
   resource_group_name         = azurerm_resource_group.bootstrap.name
   location                    = azurerm_resource_group.bootstrap.location
