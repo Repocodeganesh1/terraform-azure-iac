@@ -10,7 +10,7 @@ pr:
 
 variables:
   - name: terraformVersion
-    value: '1.15.0'
+    value: 'v1.15.8'
 
   - name: azureServiceConnection
     value: 'bootstrap'
