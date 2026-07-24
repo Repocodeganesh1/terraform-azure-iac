@@ -54,13 +54,3 @@ module "key_vault" {
   tags                        = local.tags
 }
 
-resource "azurerm_key_vault_secret" "infracost_api_key" {
-  name              = "INFRACOST-API-KEY"
-  value_wo          = var.infracost_api_key
-  value_wo_version  = "1"   # you can choose any string to represent the version
-  key_vault_id      = module.key_vault.id
-
-  lifecycle {
-  ignore_changes = [value, value_wo, value_wo_version]
-}
-}

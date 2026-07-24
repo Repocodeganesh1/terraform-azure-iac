@@ -62,8 +62,3 @@ variable "key_vault_purge_protection_enabled" {
   type        = bool
   default     = false
 }
-variable "infracost_api_key" {
-  description = "API key for Infracost"
-  type        = string
-  sensitive   = true
-}
