@@ -1,82 +1,79 @@
 parameters:
-- name: terraformVersion
-  type: string
+  - name: terraformVersion
+    type: string
 
-- name: workingDirectory
-  type: string
+  - name: azureServiceConnection
+    type: string
 
-- name: azureServiceConnection
-  type: string
+  - name: workingDirectory
+    type: string
 
-jobs:
+stages:
+- stage: Apply
+  displayName: "Terraform Apply"
+  dependsOn: Plan
 
-- job: Apply
-  displayName: Terraform Apply
+  condition: |
+    and(
+      succeeded(),
+      eq(variables['Build.SourceBranch'], 'refs/heads/main')
+    )
 
-  steps:
+  jobs:
+  - deployment: Apply
+    displayName: "Apply Terraform Changes"
 
-  - checkout: self
-    clean: true
+    environment: bootstrap
 
-  # Install Terraform
-  - task: TerraformInstaller@1
-    displayName: Install Terraform
-    inputs:
-      terraformVersion: ${{ parameters.terraformVersion }}
+    strategy:
+      runOnce:
+        deploy:
 
-  # Configure Plugin Cache
-  - script: |
-      mkdir -p ~/.terraform.d/plugin-cache
+          steps:
 
-      cat > ~/.terraformrc <<EOF
-      plugin_cache_dir="$HOME/.terraform.d/plugin-cache"
-      EOF
-    displayName: Configure Terraform Plugin Cache
+          - checkout: self
+            clean: true
 
-  # Restore Cache
-  - task: Cache@2
-    displayName: Restore Terraform Provider Cache
-    inputs:
-      key: terraform | "$(Agent.OS)" | ${{ parameters.workingDirectory }}/.terraform.lock.hcl
-      restoreKeys: |
-        terraform | "$(Agent.OS)"
-      path: ~/.terraform.d/plugin-cache
+          - download: current
+            artifact: terraform-plan
 
-  # Download Plan Artifact
-  - task: DownloadPipelineArtifact@2
-    displayName: Download Terraform Plan
-    inputs:
-      artifact: terraform-plan
-      path: $(Pipeline.Workspace)/terraform-plan
+          - task: TerraformInstaller@1
+            displayName: Install Terraform
+            inputs:
+              terraformVersion: ${{ parameters.terraformVersion }}
 
-  # Terraform Init
-  - task: AzureCLI@2
-    displayName: Terraform Init
-    inputs:
-      azureSubscription: ${{ parameters.azureServiceConnection }}
-      scriptType: bash
-      scriptLocation: inlineScript
-      inlineScript: |
-        set -e
+          - task: Cache@2
+            displayName: Cache Terraform Providers
+            inputs:
+              key: 'terraform | "$(Agent.OS)" | ${{ parameters.workingDirectory }}/.terraform.lock.hcl'
+              restoreKeys: |
+                terraform | "$(Agent.OS)"
+              path: $(Pipeline.Workspace)/.terraform.d/plugin-cache
 
-        cd $(Pipeline.Workspace)/terraform-plan
+          - script: |
+              mkdir -p $(Pipeline.Workspace)/.terraform.d/plugin-cache
 
-        terraform init \
-          -backend-config=backend.hcl
+              cat > ~/.terraformrc <<EOF
+              plugin_cache_dir = "$(Pipeline.Workspace)/.terraform.d/plugin-cache"
+              EOF
+            displayName: Configure Terraform Plugin Cache
 
-  # Terraform Apply
-  - task: AzureCLI@2
-    displayName: Terraform Apply
-    inputs:
-      azureSubscription: ${{ parameters.azureServiceConnection }}
-      scriptType: bash
-      scriptLocation: inlineScript
-      inlineScript: |
-        set -e
+          - task: AzureCLI@2
+            displayName: Terraform Init
+            inputs:
+              azureSubscription: ${{ parameters.azureServiceConnection }}
+              scriptType: bash
+              scriptLocation: inlineScript
+              workingDirectory: ${{ parameters.workingDirectory }}
+              inlineScript: |
+                terraform init
 
-        cd $(Pipeline.Workspace)/terraform-plan
+          - script: |
+              cp $(Pipeline.Workspace)/terraform-plan/tfplan.binary .
+            workingDirectory: ${{ parameters.workingDirectory }}
+            displayName: Restore Saved Plan
 
-        terraform apply \
-          -lock=true \
-          -auto-approve \
-          tfplan.binary
+          - script: |
+              terraform apply -input=false -auto-approve tfplan.binary
+            workingDirectory: ${{ parameters.workingDirectory }}
+            displayName: Terraform Apply

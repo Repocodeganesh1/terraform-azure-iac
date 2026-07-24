@@ -1,106 +1,99 @@
 parameters:
-- name: terraformVersion
-  type: string
+  - name: terraformVersion
+    type: string
 
-- name: workingDirectory
-  type: string
+  - name: azureServiceConnection
+    type: string
 
-- name: azureServiceConnection
-  type: string
+  - name: workingDirectory
+    type: string
 
-- name: keyVaultName
-  type: string
+  - name: keyVaultName
+    type: string
 
-- name: infracostSecret
-  type: string
+  - name: infracostSecretName
+    type: string
 
-jobs:
+stages:
+- stage: Plan
+  displayName: "Terraform Plan"
+  dependsOn: Validate
 
-- job: Plan
-  displayName: Terraform Plan
+  jobs:
+  - job: Plan
+    displayName: "Terraform Plan"
 
-  steps:
+    steps:
 
-  - checkout: self
-    clean: true
+    - checkout: self
+      clean: true
 
-  - task: TerraformInstaller@1
-    displayName: Install Terraform
-    inputs:
-      terraformVersion: ${{ parameters.terraformVersion }}
+    - task: TerraformInstaller@1
+      displayName: Install Terraform
+      inputs:
+        terraformVersion: ${{ parameters.terraformVersion }}
 
-  - script: |
-      mkdir -p ~/.terraform.d/plugin-cache
+    - task: Cache@2
+      displayName: Cache Terraform Providers
+      inputs:
+        key: 'terraform | "$(Agent.OS)" | ${{ parameters.workingDirectory }}/.terraform.lock.hcl'
+        restoreKeys: |
+          terraform | "$(Agent.OS)"
+        path: $(Pipeline.Workspace)/.terraform.d/plugin-cache
 
-      cat > ~/.terraformrc <<EOF
-      plugin_cache_dir="$HOME/.terraform.d/plugin-cache"
-      EOF
-    displayName: Configure Terraform Plugin Cache
+    - script: |
+        mkdir -p $(Pipeline.Workspace)/.terraform.d/plugin-cache
 
-  - task: Cache@2
-    displayName: Restore Terraform Provider Cache
-    inputs:
-      key: terraform | "$(Agent.OS)" | ${{ parameters.workingDirectory }}/.terraform.lock.hcl
-      restoreKeys: |
-        terraform | "$(Agent.OS)"
-      path: ~/.terraform.d/plugin-cache
+        cat > ~/.terraformrc <<EOF
+        plugin_cache_dir = "$(Pipeline.Workspace)/.terraform.d/plugin-cache"
+        EOF
+      displayName: Configure Terraform Plugin Cache
 
-  - task: AzureCLI@2
-    displayName: Terraform Init
-    inputs:
-      azureSubscription: ${{ parameters.azureServiceConnection }}
-      scriptType: bash
-      scriptLocation: inlineScript
-      inlineScript: |
-        set -e
+    - task: AzureCLI@2
+      displayName: Terraform Init
+      inputs:
+        azureSubscription: ${{ parameters.azureServiceConnection }}
+        scriptType: bash
+        scriptLocation: inlineScript
+        workingDirectory: ${{ parameters.workingDirectory }}
+        inlineScript: |
+          terraform init
 
-        cd ${{ parameters.workingDirectory }}
+    - task: AzureKeyVault@2
+      displayName: Retrieve Secrets
+      inputs:
+        azureSubscription: ${{ parameters.azureServiceConnection }}
+        KeyVaultName: ${{ parameters.keyVaultName }}
+        SecretsFilter: '*'
+        RunAsPreJob: false
 
-        terraform init \
-          -backend-config=backend.hcl
-
-  - task: AzureCLI@2
-    displayName: Terraform Plan
-    inputs:
-      azureSubscription: ${{ parameters.azureServiceConnection }}
-      scriptType: bash
-      scriptLocation: inlineScript
-      inlineScript: |
-        set -e
-
-        cd ${{ parameters.workingDirectory }}
-
+    - script: |
         terraform plan \
-          -lock=true \
           -out=tfplan.binary
+      displayName: Terraform Plan
+      workingDirectory: ${{ parameters.workingDirectory }}
 
+    - script: |
         terraform show -json tfplan.binary > plan.json
+      displayName: Export JSON Plan
+      workingDirectory: ${{ parameters.workingDirectory }}
 
-  - task: AzureKeyVault@2
-    displayName: Retrieve Infracost API Key
-    inputs:
-      azureSubscription: ${{ parameters.azureServiceConnection }}
-      KeyVaultName: ${{ parameters.keyVaultName }}
-      SecretsFilter: ${{ parameters.infracostSecret }}
+    - script: |
+        curl -fsSL https://raw.githubusercontent.com/infracost/infracost/master/scripts/install.sh | sh
+      displayName: Install Infracost
 
-  - script: |
-      curl -fsSL https://raw.githubusercontent.com/infracost/infracost/master/scripts/install.sh | sh
-    displayName: Install Infracost
+    - script: |
+        export INFRACOST_API_KEY=$(${{ parameters.infracostSecretName }})
 
-  - script: |
-      set -e
+        infracost breakdown \
+          --path plan.json \
+          --format table
+      displayName: Infracost Cost Estimate
+      workingDirectory: ${{ parameters.workingDirectory }}
+      continueOnError: true
 
-      cd ${{ parameters.workingDirectory }}
-
-      infracost breakdown \
-        --path plan.json \
-        --format table
-    displayName: Infracost Cost Estimate
-    env:
-      INFRACOST_API_KEY: $(INFRACOST-API-KEY)
-
-  - task: PublishPipelineArtifact@1
-    displayName: Publish Terraform Plan
-    inputs:
-      targetPath: ${{ parameters.workingDirectory }}
+    - publish: ${{ parameters.workingDirectory }}/tfplan.binary
       artifact: terraform-plan
+
+    - publish: ${{ parameters.workingDirectory }}/plan.json
+      artifact: terraform-plan-json

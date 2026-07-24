@@ -1,83 +1,52 @@
 trigger:
   branches:
     include:
-      - develop
       - main
+      - develop
 
 pr:
   branches:
     include:
-      - develop
       - main
+      - develop
+
+variables:
+  - name: terraformVersion
+    value: '1.15.0'
+
+  - name: azureServiceConnection
+    value: 'bootstrap'
+
+  - name: workingDirectory
+    value: 'environments/bootstrap'
+
+  - name: keyVaultName
+    value: 'kv-ht-boot-cin-01'
+
+  - name: infracostSecretName
+    value: 'INFRACOST-API-KEY'
 
 pool:
   vmImage: ubuntu-latest
 
-variables:
-  terraformVersion: '1.15.8'
-  workingDirectory: 'environments/bootstrap'
-
-  azureServiceConnection: 'bootstrap'
-
-  keyVaultName: 'kv-ht-boot-cin-01'
-  infracostSecret: 'INFRACOST-API-KEY'
-
 stages:
 
-#=========================================================
-# VALIDATE
-#=========================================================
+- template: templates/validate.yml
+  parameters:
+    terraformVersion: $(terraformVersion)
+    azureServiceConnection: $(azureServiceConnection)
+    workingDirectory: $(workingDirectory)
 
-- stage: Validate
-  displayName: Validate
+- template: templates/plan.yml
+  parameters:
+    terraformVersion: $(terraformVersion)
+    azureServiceConnection: $(azureServiceConnection)
+    workingDirectory: $(workingDirectory)
+    keyVaultName: $(keyVaultName)
+    infracostSecretName: $(infracostSecretName)
 
-  jobs:
-
-  - template: templates/validate.yml
-    parameters:
-      terraformVersion: $(terraformVersion)
-      workingDirectory: $(workingDirectory)
-      azureServiceConnection: $(azureServiceConnection)
-
-#=========================================================
-# PLAN
-#=========================================================
-
-- stage: Plan
-
-  displayName: Plan
-
-  dependsOn: Validate
-
-  jobs:
-
-  - template: templates/plan.yml
-    parameters:
-      terraformVersion: $(terraformVersion)
-      workingDirectory: $(workingDirectory)
-      azureServiceConnection: $(azureServiceConnection)
-      keyVaultName: $(keyVaultName)
-      infracostSecret: $(infracostSecret)
-
-#=========================================================
-# APPLY
-#=========================================================
-
-- stage: Apply
-
-  displayName: Apply
-
-  dependsOn: Plan
-
-  condition: and(
-    succeeded(),
-    eq(variables['Build.SourceBranch'], 'refs/heads/main')
-  )
-
-  jobs:
-
-  - template: templates/apply.yml
-    parameters:
-      terraformVersion: $(terraformVersion)
-      workingDirectory: $(workingDirectory)
-      azureServiceConnection: $(azureServiceConnection)
+- template: templates/apply.yml
+  parameters:
+    terraformVersion: $(terraformVersion)
+    azureServiceConnection: $(azureServiceConnection)
+    workingDirectory: $(workingDirectory)
