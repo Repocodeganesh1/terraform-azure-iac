@@ -1,0 +1,104 @@
+parameters:
+- name: terraformVersion
+  type: string
+
+- name: workingDirectory
+  type: string
+
+- name: azureServiceConnection
+  type: string
+
+stages:
+
+- stage: Validate
+  displayName: Validate
+
+  jobs:
+
+  - job: Validate
+    displayName: Terraform Validation
+
+    pool:
+      vmImage: ubuntu-latest
+
+    steps:
+
+    - checkout: self
+      clean: true
+
+    # Install Terraform
+    - task: TerraformInstaller@1
+      displayName: Install Terraform
+
+      inputs:
+        terraformVersion: ${{ parameters.terraformVersion }}
+
+    # Configure Plugin Cache
+    - script: |
+        mkdir -p ~/.terraform.d/plugin-cache
+
+        cat > ~/.terraformrc <<EOF
+        plugin_cache_dir="$HOME/.terraform.d/plugin-cache"
+        EOF
+      displayName: Configure Terraform Plugin Cache
+
+    # Restore Provider Cache
+    - task: Cache@2
+      displayName: Restore Terraform Provider Cache
+
+      inputs:
+        key: terraform | "$(Agent.OS)" | ${{ parameters.workingDirectory }}/.terraform.lock.hcl
+
+        restoreKeys: |
+          terraform | "$(Agent.OS)"
+
+        path: ~/.terraform.d/plugin-cache
+
+    # Terraform Format
+    - task: AzureCLI@2
+      displayName: Terraform Format Check
+
+      inputs:
+        azureSubscription: ${{ parameters.azureServiceConnection }}
+        scriptType: bash
+        scriptLocation: inlineScript
+
+        inlineScript: |
+          set -e
+
+          cd ${{ parameters.workingDirectory }}
+
+          terraform fmt -check -recursive
+
+    # Terraform Init
+    - task: AzureCLI@2
+      displayName: Terraform Init
+
+      inputs:
+        azureSubscription: ${{ parameters.azureServiceConnection }}
+        scriptType: bash
+        scriptLocation: inlineScript
+
+        inlineScript: |
+          set -e
+
+          cd ${{ parameters.workingDirectory }}
+
+          terraform init \
+            -backend-config=backend.hcl
+
+    # Terraform Validate
+    - task: AzureCLI@2
+      displayName: Terraform Validate
+
+      inputs:
+        azureSubscription: ${{ parameters.azureServiceConnection }}
+        scriptType: bash
+        scriptLocation: inlineScript
+
+        inlineScript: |
+          set -e
+
+          cd ${{ parameters.workingDirectory }}
+
+          terraform validate

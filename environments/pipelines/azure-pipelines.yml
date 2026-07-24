@@ -1,0 +1,421 @@
+trigger:
+  branches:
+    include:
+      - develop
+      - main
+
+pr:
+  branches:
+    include:
+      - main
+
+pool:
+  vmImage: ubuntu-latest
+
+variables:
+  terraformVersion: '1.15.8'
+  workingDirectory: 'environments/bootstrap'
+
+  azureServiceConnection: 'bootstrap'
+  keyVaultName: 'kv-ht-boot-cin-01'
+  infracostSecret: 'INFRACOST-API-KEY'
+
+stages:
+
+#====================================================================
+# VALIDATE STAGE
+#====================================================================
+
+- stage: Validate
+  displayName: Validate
+
+  jobs:
+
+  - job: Validate
+    displayName: Terraform Validation
+
+    steps:
+
+    #----------------------------------------------------------
+    # Checkout
+    #----------------------------------------------------------
+
+    - checkout: self
+      clean: true
+
+    #----------------------------------------------------------
+    # Install Terraform
+    #----------------------------------------------------------
+
+    - task: TerraformInstaller@1
+      displayName: Install Terraform
+
+      inputs:
+        terraformVersion: $(terraformVersion)
+
+    #----------------------------------------------------------
+    # Configure Provider Cache
+    #----------------------------------------------------------
+
+    - script: |
+        mkdir -p ~/.terraform.d/plugin-cache
+
+        cat > ~/.terraformrc <<EOF
+        plugin_cache_dir="$HOME/.terraform.d/plugin-cache"
+        EOF
+      displayName: Configure Terraform Plugin Cache
+
+    #----------------------------------------------------------
+    # Restore Cache
+    #----------------------------------------------------------
+
+    - task: Cache@2
+      displayName: Restore Terraform Provider Cache
+
+      inputs:
+        key: terraform | "$(Agent.OS)" | $(workingDirectory)/.terraform.lock.hcl
+
+        restoreKeys: |
+          terraform | "$(Agent.OS)"
+
+        path: ~/.terraform.d/plugin-cache
+
+    #----------------------------------------------------------
+    # Terraform Format Check
+    #----------------------------------------------------------
+
+    - task: AzureCLI@2
+      displayName: Terraform Format Check
+
+      inputs:
+        azureSubscription: $(azureServiceConnection)
+        scriptType: bash
+        scriptLocation: inlineScript
+
+        inlineScript: |
+
+          set -e
+
+          cd $(workingDirectory)
+
+          terraform fmt -check -recursive
+
+    #----------------------------------------------------------
+    # Terraform Init
+    #----------------------------------------------------------
+
+    - task: AzureCLI@2
+      displayName: Terraform Init
+
+      inputs:
+        azureSubscription: $(azureServiceConnection)
+        scriptType: bash
+        scriptLocation: inlineScript
+
+        inlineScript: |
+
+          set -e
+
+          cd $(workingDirectory)
+
+          terraform init \
+            -backend-config=backend.hcl
+
+    #----------------------------------------------------------
+    # Terraform Validate
+    #----------------------------------------------------------
+
+    - task: AzureCLI@2
+      displayName: Terraform Validate
+
+      inputs:
+        azureSubscription: $(azureServiceConnection)
+        scriptType: bash
+        scriptLocation: inlineScript
+
+        inlineScript: |
+
+          set -e
+
+          cd $(workingDirectory)
+
+          terraform validate
+#====================================================================
+# PLAN STAGE
+#====================================================================
+
+- stage: Plan
+  displayName: Plan
+
+  dependsOn: Validate
+  condition: succeeded()
+
+  jobs:
+
+  - job: Plan
+    displayName: Terraform Plan
+
+    steps:
+
+    #----------------------------------------------------------
+    # Checkout
+    #----------------------------------------------------------
+
+    - checkout: self
+      clean: true
+
+    #----------------------------------------------------------
+    # Install Terraform
+    #----------------------------------------------------------
+
+    - task: TerraformInstaller@1
+      displayName: Install Terraform
+
+      inputs:
+        terraformVersion: $(terraformVersion)
+
+    #----------------------------------------------------------
+    # Configure Provider Cache
+    #----------------------------------------------------------
+
+    - script: |
+        mkdir -p ~/.terraform.d/plugin-cache
+
+        cat > ~/.terraformrc <<EOF
+        plugin_cache_dir="$HOME/.terraform.d/plugin-cache"
+        EOF
+      displayName: Configure Terraform Plugin Cache
+
+    #----------------------------------------------------------
+    # Restore Cache
+    #----------------------------------------------------------
+
+    - task: Cache@2
+      displayName: Restore Terraform Provider Cache
+
+      inputs:
+        key: terraform | "$(Agent.OS)" | $(workingDirectory)/.terraform.lock.hcl
+
+        restoreKeys: |
+          terraform | "$(Agent.OS)"
+
+        path: ~/.terraform.d/plugin-cache
+
+    #----------------------------------------------------------
+    # Terraform Init
+    #----------------------------------------------------------
+
+    - task: AzureCLI@2
+      displayName: Terraform Init
+
+      inputs:
+        azureSubscription: $(azureServiceConnection)
+        scriptType: bash
+        scriptLocation: inlineScript
+
+        inlineScript: |
+
+          set -e
+
+          cd $(workingDirectory)
+
+          terraform init \
+            -backend-config=backend.hcl
+
+    #----------------------------------------------------------
+    # Terraform Plan
+    #----------------------------------------------------------
+
+    - task: AzureCLI@2
+      displayName: Terraform Plan
+
+      inputs:
+        azureSubscription: $(azureServiceConnection)
+        scriptType: bash
+        scriptLocation: inlineScript
+
+        inlineScript: |
+
+          set -e
+
+          cd $(workingDirectory)
+
+          terraform plan \
+            -lock=true \
+            -out=tfplan.binary
+
+          terraform show \
+            -json tfplan.binary \
+            > plan.json
+
+    #----------------------------------------------------------
+    # Get Infracost API Key
+    #----------------------------------------------------------
+
+    - task: AzureKeyVault@2
+      displayName: Get Infracost API Key
+
+      inputs:
+        azureSubscription: $(azureServiceConnection)
+        KeyVaultName: $(keyVaultName)
+        SecretsFilter: $(infracostSecret)
+
+    #----------------------------------------------------------
+    # Install Infracost
+    #----------------------------------------------------------
+
+    - script: |
+        curl -fsSL https://raw.githubusercontent.com/infracost/infracost/master/scripts/install.sh | sh
+      displayName: Install Infracost
+
+    #----------------------------------------------------------
+    # Infracost Cost Estimate
+    #----------------------------------------------------------
+
+    - script: |
+
+        set -e
+
+        cd $(workingDirectory)
+
+        infracost breakdown \
+          --path plan.json \
+          --format table
+
+      displayName: Infracost Cost Estimate
+
+      env:
+        INFRACOST_API_KEY: $(INFRACOST-API-KEY)
+
+    #----------------------------------------------------------
+    # Publish Pipeline Artifact
+    #----------------------------------------------------------
+
+    - task: PublishPipelineArtifact@1
+      displayName: Publish Terraform Plan
+
+      inputs:
+        targetPath: $(workingDirectory)
+        artifact: terraform-plan
+#====================================================================
+# APPLY STAGE
+#====================================================================
+#====================================================================
+# APPLY STAGE
+#====================================================================
+
+- stage: Apply
+  displayName: Apply
+
+  dependsOn: Plan
+
+  condition: and(
+    succeeded(),
+    eq(variables['Build.SourceBranch'], 'refs/heads/main')
+  )
+
+  jobs:
+
+  - job: Apply
+    displayName: Terraform Apply
+
+    steps:
+
+    #----------------------------------------------------------
+    # Checkout
+    #----------------------------------------------------------
+
+    - checkout: self
+      clean: true
+
+    #----------------------------------------------------------
+    # Install Terraform
+    #----------------------------------------------------------
+
+    - task: TerraformInstaller@1
+      displayName: Install Terraform
+
+      inputs:
+        terraformVersion: $(terraformVersion)
+
+    #----------------------------------------------------------
+    # Configure Provider Cache
+    #----------------------------------------------------------
+
+    - script: |
+        mkdir -p ~/.terraform.d/plugin-cache
+
+        cat > ~/.terraformrc <<EOF
+        plugin_cache_dir="$HOME/.terraform.d/plugin-cache"
+        EOF
+      displayName: Configure Terraform Plugin Cache
+
+    #----------------------------------------------------------
+    # Restore Cache
+    #----------------------------------------------------------
+
+    - task: Cache@2
+      displayName: Restore Terraform Provider Cache
+
+      inputs:
+        key: terraform | "$(Agent.OS)" | $(workingDirectory)/.terraform.lock.hcl
+
+        restoreKeys: |
+          terraform | "$(Agent.OS)"
+
+        path: ~/.terraform.d/plugin-cache
+
+    #----------------------------------------------------------
+    # Download Terraform Plan
+    #----------------------------------------------------------
+
+    - task: DownloadPipelineArtifact@2
+      displayName: Download Terraform Plan
+
+      inputs:
+        artifact: terraform-plan
+        path: $(Pipeline.Workspace)/terraform-plan
+
+    #----------------------------------------------------------
+    # Terraform Init
+    #----------------------------------------------------------
+
+    - task: AzureCLI@2
+      displayName: Terraform Init
+
+      inputs:
+        azureSubscription: $(azureServiceConnection)
+        scriptType: bash
+        scriptLocation: inlineScript
+
+        inlineScript: |
+
+          set -e
+
+          cd $(Pipeline.Workspace)/terraform-plan
+
+          terraform init \
+            -backend-config=backend.hcl
+
+    #----------------------------------------------------------
+    # Terraform Apply
+    #----------------------------------------------------------
+
+    - task: AzureCLI@2
+      displayName: Terraform Apply
+
+      inputs:
+        azureSubscription: $(azureServiceConnection)
+        scriptType: bash
+        scriptLocation: inlineScript
+
+        inlineScript: |
+
+          set -e
+
+          cd $(Pipeline.Workspace)/terraform-plan
+
+          terraform apply \
+            -lock=true \
+            -auto-approve \
+            tfplan.binary
