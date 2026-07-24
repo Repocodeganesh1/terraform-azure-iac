@@ -76,7 +76,12 @@ stages:
             workingDirectory: ${{ parameters.workingDirectory }}
             displayName: Restore Saved Plan
 
-          - script: |
-              terraform apply -input=false -auto-approve tfplan.binary
-            workingDirectory: ${{ parameters.workingDirectory }}
+          - task: AzureCLI@2
             displayName: Terraform Apply
+            inputs:
+              azureSubscription: ${{ parameters.azureServiceConnection }}
+              scriptType: bash
+              scriptLocation: inlineScript
+              workingDirectory: ${{ parameters.workingDirectory }}
+              inlineScript: |
+                terraform apply -input=false -auto-approve tfplan.binary
