@@ -8,97 +8,73 @@ parameters:
 - name: azureServiceConnection
   type: string
 
-stages:
+jobs:
 
-- stage: Validate
-  displayName: Validate
+- job: Validate
+  displayName: Terraform Validation
 
-  jobs:
+  steps:
 
-  - job: Validate
-    displayName: Terraform Validation
+  - checkout: self
+    clean: true
 
-    pool:
-      vmImage: ubuntu-latest
+  - task: TerraformInstaller@1
+    displayName: Install Terraform
+    inputs:
+      terraformVersion: ${{ parameters.terraformVersion }}
 
-    steps:
+  - script: |
+      mkdir -p ~/.terraform.d/plugin-cache
 
-    - checkout: self
-      clean: true
+      cat > ~/.terraformrc <<EOF
+      plugin_cache_dir="$HOME/.terraform.d/plugin-cache"
+      EOF
+    displayName: Configure Terraform Plugin Cache
 
-    # Install Terraform
-    - task: TerraformInstaller@1
-      displayName: Install Terraform
+  - task: Cache@2
+    displayName: Restore Terraform Provider Cache
+    inputs:
+      key: terraform | "$(Agent.OS)" | ${{ parameters.workingDirectory }}/.terraform.lock.hcl
+      restoreKeys: |
+        terraform | "$(Agent.OS)"
+      path: ~/.terraform.d/plugin-cache
 
-      inputs:
-        terraformVersion: ${{ parameters.terraformVersion }}
+  - task: AzureCLI@2
+    displayName: Terraform Format Check
+    inputs:
+      azureSubscription: ${{ parameters.azureServiceConnection }}
+      scriptType: bash
+      scriptLocation: inlineScript
+      inlineScript: |
+        set -e
 
-    # Configure Plugin Cache
-    - script: |
-        mkdir -p ~/.terraform.d/plugin-cache
+        cd ${{ parameters.workingDirectory }}
 
-        cat > ~/.terraformrc <<EOF
-        plugin_cache_dir="$HOME/.terraform.d/plugin-cache"
-        EOF
-      displayName: Configure Terraform Plugin Cache
+        terraform fmt -check -recursive
 
-    # Restore Provider Cache
-    - task: Cache@2
-      displayName: Restore Terraform Provider Cache
+  - task: AzureCLI@2
+    displayName: Terraform Init
+    inputs:
+      azureSubscription: ${{ parameters.azureServiceConnection }}
+      scriptType: bash
+      scriptLocation: inlineScript
+      inlineScript: |
+        set -e
 
-      inputs:
-        key: terraform | "$(Agent.OS)" | ${{ parameters.workingDirectory }}/.terraform.lock.hcl
+        cd ${{ parameters.workingDirectory }}
 
-        restoreKeys: |
-          terraform | "$(Agent.OS)"
+        terraform init \
+          -backend-config=backend.hcl
 
-        path: ~/.terraform.d/plugin-cache
+  - task: AzureCLI@2
+    displayName: Terraform Validate
+    inputs:
+      azureSubscription: ${{ parameters.azureServiceConnection }}
+      scriptType: bash
+      scriptLocation: inlineScript
+      inlineScript: |
+        set -e
 
-    # Terraform Format
-    - task: AzureCLI@2
-      displayName: Terraform Format Check
+        cd ${{ parameters.workingDirectory }}
 
-      inputs:
-        azureSubscription: ${{ parameters.azureServiceConnection }}
-        scriptType: bash
-        scriptLocation: inlineScript
-
-        inlineScript: |
-          set -e
-
-          cd ${{ parameters.workingDirectory }}
-
-          terraform fmt -check -recursive
-
-    # Terraform Init
-    - task: AzureCLI@2
-      displayName: Terraform Init
-
-      inputs:
-        azureSubscription: ${{ parameters.azureServiceConnection }}
-        scriptType: bash
-        scriptLocation: inlineScript
-
-        inlineScript: |
-          set -e
-
-          cd ${{ parameters.workingDirectory }}
-
-          terraform init \
-            -backend-config=backend.hcl
-
-    # Terraform Validate
-    - task: AzureCLI@2
-      displayName: Terraform Validate
-
-      inputs:
-        azureSubscription: ${{ parameters.azureServiceConnection }}
-        scriptType: bash
-        scriptLocation: inlineScript
-
-        inlineScript: |
-          set -e
-
-          cd ${{ parameters.workingDirectory }}
-
-          terraform validate
+        terraform validate

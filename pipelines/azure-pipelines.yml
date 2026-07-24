@@ -16,28 +16,68 @@ pool:
 variables:
   terraformVersion: '1.15.8'
   workingDirectory: 'environments/bootstrap'
+
   azureServiceConnection: 'bootstrap'
+
   keyVaultName: 'kv-ht-boot-cin-01'
   infracostSecret: 'INFRACOST-API-KEY'
 
 stages:
 
-- template: templates/validate.yml
-  parameters:
-    terraformVersion: $(terraformVersion)
-    workingDirectory: $(workingDirectory)
-    azureServiceConnection: $(azureServiceConnection)
+#=========================================================
+# VALIDATE
+#=========================================================
 
-- template: templates/plan.yml
-  parameters:
-    terraformVersion: $(terraformVersion)
-    workingDirectory: $(workingDirectory)
-    azureServiceConnection: $(azureServiceConnection)
-    keyVaultName: $(keyVaultName)
-    infracostSecret: $(infracostSecret)
+- stage: Validate
+  displayName: Validate
 
-- template: templates/apply.yml
-  parameters:
-    terraformVersion: $(terraformVersion)
-    workingDirectory: $(workingDirectory)
-    azureServiceConnection: $(azureServiceConnection)
+  jobs:
+
+  - template: templates/validate.yml
+    parameters:
+      terraformVersion: $(terraformVersion)
+      workingDirectory: $(workingDirectory)
+      azureServiceConnection: $(azureServiceConnection)
+
+#=========================================================
+# PLAN
+#=========================================================
+
+- stage: Plan
+
+  displayName: Plan
+
+  dependsOn: Validate
+
+  jobs:
+
+  - template: templates/plan.yml
+    parameters:
+      terraformVersion: $(terraformVersion)
+      workingDirectory: $(workingDirectory)
+      azureServiceConnection: $(azureServiceConnection)
+      keyVaultName: $(keyVaultName)
+      infracostSecret: $(infracostSecret)
+
+#=========================================================
+# APPLY
+#=========================================================
+
+- stage: Apply
+
+  displayName: Apply
+
+  dependsOn: Plan
+
+  condition: and(
+    succeeded(),
+    eq(variables['Build.SourceBranch'], 'refs/heads/main')
+  )
+
+  jobs:
+
+  - template: templates/apply.yml
+    parameters:
+      terraformVersion: $(terraformVersion)
+      workingDirectory: $(workingDirectory)
+      azureServiceConnection: $(azureServiceConnection)
