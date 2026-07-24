@@ -8,6 +8,12 @@ parameters:
 - name: azureServiceConnection
   type: string
 
+- name: keyVaultName
+  type: string
+
+- name: infracostSecret
+  type: string
+
 stages:
 
 - stage: Validate
