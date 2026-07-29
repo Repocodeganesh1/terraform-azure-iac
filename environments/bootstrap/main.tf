@@ -53,17 +53,3 @@ module "key_vault" {
   purge_protection_enabled      = var.key_vault_purge_protection_enabled
   tags                          = local.tags
 }
-
-module "key_vault2" {
-  source                        = "../../modules/key_vault"
-  name                          = var.key_vault_name2
-  resource_group_name           = azurerm_resource_group.bootstrap.name
-  location                      = azurerm_resource_group.bootstrap.location
-  tenant_id                     = data.azurerm_client_config.current.tenant_id
-  sku_name                      = var.key_vault_sku_name
-  enable_rbac_authorization     = true
-  public_network_access_enabled = true
-  soft_delete_retention_days    = 7
-  purge_protection_enabled      = var.key_vault_purge_protection_enabled
-  tags                          = local.tags
-}
