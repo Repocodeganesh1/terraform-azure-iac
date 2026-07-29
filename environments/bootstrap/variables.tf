@@ -51,6 +51,12 @@ variable "key_vault_name" {
   default     = "kv-ht-boot-cin-01"
 }
 
+variable "key_vault_name2" {
+  description = "Name of the Key Vault to create in the bootstrap resource group."
+  type        = string
+  default     = "kv-ht-boot-cin-02"
+}
+
 variable "key_vault_sku_name" {
   description = "SKU to use for the Key Vault."
   type        = string
