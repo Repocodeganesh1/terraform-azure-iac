@@ -93,7 +93,7 @@ stages:
       displayName: 'Install Infracost'
 
     - script: |
-        infracost scan --path . || echo "Infracost estimate failed; continuing without blocking Terraform plan artifacts."
+        infracost scan . || echo "Infracost estimate failed; continuing without blocking Terraform plan artifacts."
       displayName: 'Infracost Cost Estimate'
       workingDirectory: ${{ parameters.workingDirectory }}
       env:
