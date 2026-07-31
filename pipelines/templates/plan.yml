@@ -121,7 +121,15 @@ stages:
       env:
         INFRACOST_API_KEY: $(INFRACOST-API-KEY)
         INFRACOST_CLI_AUTHENTICATION_TOKEN: $(INFRACOST-API-KEY)
-        
+
+    - script: |
+        infracost scan . --terraform-plan-flags="-backend-config=backend.hcl" || echo "Infracost estimate failed; continuing..."
+      displayName: 'Infracost Cost Estimate'
+      workingDirectory: ${{ parameters.workingDirectory }}
+      env:
+        INFRACOST_API_KEY: $(INFRACOST-API-KEY)
+        INFRACOST_CLI_AUTHENTICATION_TOKEN: $(INFRACOST-API-KEY)
+
     - publish: ${{ parameters.workingDirectory }}/tfplan.binary
       artifact: terraform-plan
 
