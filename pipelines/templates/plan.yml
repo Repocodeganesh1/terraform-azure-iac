@@ -130,6 +130,18 @@ stages:
         INFRACOST_API_KEY: $(INFRACOST-API-KEY)
         INFRACOST_CLI_AUTHENTICATION_TOKEN: $(INFRACOST-API-KEY)
 
+    - script: |
+        # Download and manifest local/remote modules for Infracost to read
+        terraform get
+        
+        # Run scan on the directory with local modules expanded
+        infracost scan . || echo "Infracost estimate failed; continuing without blocking Terraform plan artifacts."
+      displayName: 'Infracost Cost Estimate (Option 6: HCL + Pre-fetched Modules)'
+      workingDirectory: ${{ parameters.workingDirectory }}
+      env:
+        INFRACOST_API_KEY: $(INFRACOST-API-KEY)
+        INFRACOST_CLI_AUTHENTICATION_TOKEN: $(INFRACOST-API-KEY)
+
     - publish: ${{ parameters.workingDirectory }}/tfplan.binary
       artifact: terraform-plan
 
