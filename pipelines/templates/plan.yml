@@ -110,7 +110,7 @@ stages:
       displayName: 'Infracost Cost Estimate'
       workingDirectory: ${{ parameters.workingDirectory }}
       env:
-        INFRACOST_API_KEY: $(INFRACOST_API_KEY)
+        INFRACOST_CLI_AUTHENTICATION_TOKEN: $(INFRACOST-API-KEY)
 
     - publish: ${{ parameters.workingDirectory }}/tfplan.binary
       artifact: terraform-plan
