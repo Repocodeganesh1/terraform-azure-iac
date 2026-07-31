@@ -15,16 +15,38 @@ variable "location_short" {
   default     = "cin"
 }
 
-variable "environment" {
-  description = "Environment suffix."
+variable "project" {
+  description = "Project code used in resource naming."
   type        = string
-  default     = "boot"
+  default     = "ht"
 }
 
-variable "project" {
-  description = "Project name used in tags."
+variable "workload" {
+  description = "Workload code used in resource naming."
   type        = string
-  default     = "happytechies"
+  default     = "bt"
+}
+
+variable "key_vault_name" {
+  description = "existing Key Vault name."
+  type        = string
+}
+
+variable "environment" {
+  description = "Environment code (d = dev, p = prod)."
+  type        = string
+  default     = "p"
+
+  validation {
+    condition     = contains(["d", "p"], var.environment)
+    error_message = "Environment must be either 'd' or 'p'."
+  }
+}
+
+variable "instance" {
+  description = "Instance number."
+  type        = string
+  default     = "01"
 }
 
 variable "owner" {
@@ -39,22 +61,10 @@ variable "cost_center" {
   default     = "shared-services"
 }
 
-variable "instance" {
-  description = "Instance number."
-  type        = string
-  default     = "01"
-}
-
 variable "tfstate_container_name" {
   description = "Name of the blob container that will hold Terraform state."
   type        = string
   default     = "tfstate"
-}
-
-variable "key_vault_name" {
-  description = "Name of the Key Vault to create in the bootstrap resource group."
-  type        = string
-  default     = "kv-ht-boot-cin-01"
 }
 
 variable "key_vault_sku_name" {

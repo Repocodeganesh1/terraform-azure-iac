@@ -3,7 +3,7 @@ locals {
   hyphen_name = lower(join("-", [
     var.resource_type,
     var.project,
-    var.workload_name,
+    var.workload,
     var.environment,
     var.location_short,
     var.instance
@@ -12,7 +12,7 @@ locals {
   compact_name = lower(join("", [
     var.resource_type,
     var.project,
-    var.workload_name,
+    var.workload,
     var.environment,
     var.location_short,
     var.instance
@@ -23,5 +23,5 @@ locals {
     "acr"
   ]
 
-resource_name = contains(local.compact_resource_types, var.resource_type) ? local.compact_name : local.hyphen_name
+  resource_name = contains(local.compact_resource_types, var.resource_type) ? local.compact_name : local.hyphen_name
 }

@@ -8,7 +8,7 @@ variable "project" {
   type        = string
 }
 
-variable "workload_name" {
+variable "workload" {
   description = "Workload name (boot, hub, shared, app, ai, etc.)"
   type        = string
 }
@@ -18,11 +18,7 @@ variable "environment" {
   type        = string
 
   validation {
-    condition = contains([
-      "d",
-      "p"
-    ], var.environment)
-
+    condition     = contains(["d", "p"], var.environment)
     error_message = "Environment must be either 'd' or 'p'."
   }
 }
