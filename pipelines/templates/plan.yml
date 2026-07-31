@@ -49,7 +49,6 @@ stages:
         EOF
       displayName: Configure Terraform Plugin Cache
 
-
     - task: AzureCLI@2
       displayName: Terraform Init
       inputs:
@@ -68,13 +67,13 @@ stages:
       inputs:
         azureSubscription: ${{ parameters.azureServiceConnection }}
         KeyVaultName: ${{ parameters.keyVaultName }}
-        SecretsFilter: ${{ parameters.infracostSecretName }}
+        SecretsFilter: '${{ parameters.infracostSecretName }}'
         RunAsPreJob: false
 
     - task: AzureCLI@2
       displayName: Terraform Plan
       inputs:
-        azureSubscription: ${{ parameters.azureServiceConnection }}
+        azureSubscription: ${{ parameters.azureSubscription }}
         scriptType: bash
         scriptLocation: inlineScript
         workingDirectory: ${{ parameters.workingDirectory }}
@@ -91,26 +90,15 @@ stages:
     - script: |
         curl -fsSL https://raw.githubusercontent.com/infracost/cli/master/scripts/install.sh | sh -s -- -v latest
         infracost --version
-      displayName: Install Infracost
-      continueOnError: true
-    - script: |
-        infracost scan plan.json || echo "Infracost estimate failed; continuing without blocking Terraform plan artifacts."
-      displayName: Infracost Cost Estimate
-      workingDirectory: ${{ parameters.workingDirectory }}
-      env:
-        INFRACOST_CLI_AUTHENTICATION_TOKEN: $(INFRACOST-API-KEY)
-
-    - script: |
-        curl -fsSL https://raw.githubusercontent.com/infracost/cli/master/scripts/install.sh | sh -s -- -v latest
-        infracost --version
       displayName: 'Install Infracost'
 
     - script: |
-        infracost breakdown --path plan.json || echo "Infracost estimate failed; continuing without blocking Terraform plan artifacts."
+        infracost scan --path . || echo "Infracost estimate failed; continuing without blocking Terraform plan artifacts."
       displayName: 'Infracost Cost Estimate'
       workingDirectory: ${{ parameters.workingDirectory }}
       env:
-        INFRACOST_CLI_AUTHENTICATION_TOKEN: $(INFRACOST-API-KEY)
+        INFRACOST_API_KEY: $(${{ parameters.infracostSecretName }})
+        INFRACOST_CLI_AUTHENTICATION_TOKEN: $(${{ parameters.infracostSecretName }})
 
     - publish: ${{ parameters.workingDirectory }}/tfplan.binary
       artifact: terraform-plan
