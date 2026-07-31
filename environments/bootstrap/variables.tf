@@ -24,7 +24,7 @@ variable "project" {
 variable "workload" {
   description = "Workload code used in resource naming."
   type        = string
-  default     = "bt"
+  default     = "boot"
 }
 
 variable "key_vault_name" {
