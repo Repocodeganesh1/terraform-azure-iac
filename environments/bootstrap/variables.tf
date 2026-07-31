@@ -9,6 +9,12 @@ variable "location" {
   default     = "centralindia"
 }
 
+variable "location_short" {
+  description = "Azure region short name."
+  type        = string
+  default     = "cin"
+}
+
 variable "environment" {
   description = "Environment suffix."
   type        = string
