@@ -73,7 +73,7 @@ stages:
     - task: AzureCLI@2
       displayName: Terraform Plan
       inputs:
-        azureSubscription: ${{ parameters.azureSubscription }}
+        azureSubscription: ${{ parameters.azureServiceConnection }}
         scriptType: bash
         scriptLocation: inlineScript
         workingDirectory: ${{ parameters.workingDirectory }}
