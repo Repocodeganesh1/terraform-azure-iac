@@ -1,14 +1,24 @@
 output "resource_group_name" {
-  description = "The bootstrap resource group name."
+  description = "Bootstrap resource group name."
   value       = azurerm_resource_group.bootstrap.name
 }
 
 output "storage_account_name" {
-  description = "The storage account used for Terraform state."
+  description = "Terraform state storage account name."
   value       = azurerm_storage_account.tfstate.name
 }
 
 output "storage_container_name" {
-  description = "The blob storage container used for Terraform state."
+  description = "Terraform state container name."
   value       = azurerm_storage_container.tfstate.name
+}
+
+output "key_vault_name" {
+  description = "Bootstrap Key Vault name."
+  value       = module.key_vault.name
+}
+
+output "key_vault_uri" {
+  description = "Bootstrap Key Vault URI."
+  value       = module.key_vault.vault_uri
 }
