@@ -93,12 +93,11 @@ stages:
       displayName: 'Install Infracost'
 
     - script: |
-        infracost scan . || echo "Infracost estimate failed; continuing without blocking Terraform plan artifacts."
+        infracost breakdown --path plan.json || echo "Infracost estimate failed; continuing without blocking Terraform plan artifacts."
       displayName: 'Infracost Cost Estimate'
       workingDirectory: ${{ parameters.workingDirectory }}
       env:
-        INFRACOST_API_KEY: $(${{ parameters.infracostSecretName }})
-        INFRACOST_CLI_AUTHENTICATION_TOKEN: $(${{ parameters.infracostSecretName }})
+        INFRACOST_CLI_AUTHENTICATION_TOKEN: $(INFRACOST-API-KEY)
 
     - publish: ${{ parameters.workingDirectory }}/tfplan.binary
       artifact: terraform-plan
