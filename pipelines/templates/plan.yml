@@ -100,6 +100,18 @@ stages:
       env:
         INFRACOST_CLI_AUTHENTICATION_TOKEN: $(INFRACOST-API-KEY)
 
+    - script: |
+        curl -fsSL https://raw.githubusercontent.com/infracost/cli/master/scripts/install.sh | sh -s -- -v latest
+        infracost --version
+      displayName: 'Install Infracost'
+
+    - script: |
+        infracost breakdown --path plan.json || echo "Infracost estimate failed; continuing without blocking Terraform plan artifacts."
+      displayName: 'Infracost Cost Estimate'
+      workingDirectory: ${{ parameters.workingDirectory }}
+      env:
+        INFRACOST_API_KEY: $(INFRACOST_API_KEY)
+
     - publish: ${{ parameters.workingDirectory }}/tfplan.binary
       artifact: terraform-plan
 
