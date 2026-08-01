@@ -1,0 +1,39 @@
+trigger:
+  branches:
+    include:
+      - develop
+      - main
+      - feature/*
+
+variables:
+  - name: terraformVersion
+    value: '1.15.8'
+
+  - name: azureServiceConnection
+    value: 'hub-prod'
+
+  - name: workingDirectory
+    value: 'environments/hub'
+
+pool:
+  vmImage: ubuntu-latest
+
+stages:
+
+- template: templates/validate.yml
+  parameters:
+    terraformVersion: $(terraformVersion)
+    azureServiceConnection: $(azureServiceConnection)
+    workingDirectory: $(workingDirectory)
+
+- template: templates/plan.yml
+  parameters:
+    terraformVersion: $(terraformVersion)
+    azureServiceConnection: $(azureServiceConnection)
+    workingDirectory: $(workingDirectory)
+
+- template: templates/apply.yml
+  parameters:
+    terraformVersion: $(terraformVersion)
+    azureServiceConnection: $(azureServiceConnection)
+    workingDirectory: $(workingDirectory)
