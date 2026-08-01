@@ -17,12 +17,6 @@ variables:
   - name: workingDirectory
     value: 'environments/bootstrap'
 
-  - name: keyVaultName
-    value: 'kv-ht-boot-p-cin-01'
-
-  - name: infracostSecretName
-    value: 'INFRACOST-API-KEY'
-
 pool:
   vmImage: ubuntu-latest
 
@@ -39,8 +33,6 @@ stages:
     terraformVersion: $(terraformVersion)
     azureServiceConnection: $(azureServiceConnection)
     workingDirectory: $(workingDirectory)
-    keyVaultName: $(keyVaultName)
-    infracostSecretName: $(infracostSecretName)
 
 - template: templates/apply.yml
   parameters:

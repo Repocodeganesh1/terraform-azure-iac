@@ -8,12 +8,6 @@ parameters:
   - name: workingDirectory
     type: string
 
-  - name: keyVaultName
-    type: string
-
-  - name: infracostSecretName
-    type: string
-
 stages:
 - stage: Plan
   displayName: "Terraform Plan"
@@ -62,14 +56,6 @@ stages:
             -backend-config=backend.hcl \
             -input=false
 
-    - task: AzureKeyVault@2
-      displayName: Retrieve Secrets
-      inputs:
-        azureSubscription: ${{ parameters.azureServiceConnection }}
-        KeyVaultName: ${{ parameters.keyVaultName }}
-        SecretsFilter: '${{ parameters.infracostSecretName }}'
-        RunAsPreJob: false
-
     - task: AzureCLI@2
       displayName: Terraform Plan
       inputs:
@@ -86,30 +72,6 @@ stages:
         terraform show -json tfplan.binary > plan.json
       displayName: Export JSON Plan
       workingDirectory: ${{ parameters.workingDirectory }}
-
-    - script: |
-        curl -fsSL https://raw.githubusercontent.com/infracost/cli/master/scripts/install.sh | sh -s -- -v latest
-        infracost --version
-      displayName: 'Install Infracost'
-
-    - script: |
-        set -e
-
-        if [ ! -f plan.json ]; then
-          echo "plan.json not found; generating it from tfplan.binary"
-          terraform show -json tfplan.binary > plan.json
-        fi
-
-        echo "Running Infracost breakdown for plan.json"
-        infracost breakdown --path plan.json --format table || {
-          echo "Infracost estimate failed; continuing without blocking Terraform plan artifacts."
-          exit 0
-        }
-      displayName: 'Infracost Cost Estimate'
-      workingDirectory: ${{ parameters.workingDirectory }}
-      env:
-        INFRACOST_API_KEY: $(INFRACOST-API-KEY)
-        INFRACOST_CLI_AUTHENTICATION_TOKEN: $(INFRACOST-API-KEY)
 
     - publish: ${{ parameters.workingDirectory }}/tfplan.binary
       artifact: terraform-plan
