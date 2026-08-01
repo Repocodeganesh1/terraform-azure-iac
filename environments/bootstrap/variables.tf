@@ -15,6 +15,12 @@ variable "location_short" {
   default     = "cin"
 }
 
+variable "company_name" {
+  description = "Company name for tagging purposes."
+  type        = string
+  default     = "HappyTechies"
+}
+
 variable "project" {
   description = "Project code used in resource naming."
   type        = string
