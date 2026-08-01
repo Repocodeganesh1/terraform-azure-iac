@@ -1,0 +1,112 @@
+variable "subscription_id" {
+  description = "Azure subscription ID for the shared services environment."
+  type        = string
+  default     = "7689ad81-71ba-481b-a17c-e1b6be61bab1"
+}
+
+variable "location" {
+  description = "Azure region for shared services resources."
+  type        = string
+  default     = "centralindia"
+}
+
+variable "location_short" {
+  description = "Azure region short name."
+  type        = string
+  default     = "cin"
+}
+
+variable "company_name" {
+  description = "Company name for tagging purposes."
+  type        = string
+  default     = "HappyTechies"
+}
+
+variable "project" {
+  description = "Project code used in resource naming."
+  type        = string
+  default     = "ht"
+}
+
+variable "workload" {
+  description = "Workload code used in resource naming."
+  type        = string
+  default     = "ss"
+}
+
+variable "environment" {
+  description = "Environment code (d = dev, p = prod)."
+  type        = string
+  default     = "p"
+
+  validation {
+    condition     = contains(["d", "p"], var.environment)
+    error_message = "Environment must be either 'd' or 'p'."
+  }
+}
+
+variable "instance" {
+  description = "Instance number."
+  type        = string
+  default     = "01"
+}
+
+variable "owner" {
+  description = "Owner tag value."
+  type        = string
+  default     = "platform-team"
+}
+
+variable "cost_center" {
+  description = "Cost center tag value."
+  type        = string
+  default     = "shared-services"
+}
+
+variable "vnet_address_space" {
+  description = "CIDR block for the shared services virtual network."
+  type        = list(string)
+  default     = ["10.30.0.0/16"]
+}
+
+variable "management_subnet_prefix" {
+  description = "Management subnet prefix for admin and shared utilities."
+  type        = string
+  default     = "10.30.0.0/24"
+}
+
+variable "shared_services_subnet_prefix" {
+  description = "Subnet prefix for shared platform services."
+  type        = string
+  default     = "10.30.1.0/24"
+}
+
+variable "private_endpoints_subnet_prefix" {
+  description = "Subnet prefix for private endpoints."
+  type        = string
+  default     = "10.30.2.0/24"
+}
+
+variable "publisher_name" {
+  description = "Publisher name used by API Management."
+  type        = string
+  default     = "HappyTechies"
+}
+
+variable "publisher_email" {
+  description = "Publisher email used by API Management."
+  type        = string
+  default     = "platform-team@contoso.com"
+}
+
+variable "log_analytics_retention_days" {
+  description = "Retention period for the Log Analytics workspace in days."
+  type        = number
+  default     = 30
+}
+
+variable "private_dns_zone_name" {
+  description = "Private DNS zone name for Key Vault private endpoint."
+  type        = string
+  default     = "privatelink.vaultcore.azure.net"
+}

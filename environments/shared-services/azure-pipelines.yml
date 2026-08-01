@@ -1,43 +1,46 @@
 trigger:
   branches:
     include:
-      - develop
       - main
-      - feature/*
+      - master
 
-pr: none
+pr:
+  branches:
+    include:
+      - main
+      - master
 
 variables:
   - name: terraformVersion
     value: '1.15.8'
 
   - name: azureServiceConnection
-    value: 'bootstrap'
+    value: 'shared-services'
 
   - name: workingDirectory
-    value: 'environments/bootstrap'
+    value: 'environments/shared-services'
 
   - name: applyBranch
-    value: 'refs/heads/develop'
+    value: 'refs/heads/main'
 
 pool:
   vmImage: ubuntu-latest
 
 stages:
 
-- template: templates/validate.yml
+- template: ../../pipelines/templates/validate.yml
   parameters:
     terraformVersion: $(terraformVersion)
     azureServiceConnection: $(azureServiceConnection)
     workingDirectory: $(workingDirectory)
 
-- template: templates/plan.yml
+- template: ../../pipelines/templates/plan.yml
   parameters:
     terraformVersion: $(terraformVersion)
     azureServiceConnection: $(azureServiceConnection)
     workingDirectory: $(workingDirectory)
 
-- template: templates/apply.yml
+- template: ../../pipelines/templates/apply.yml
   parameters:
     terraformVersion: $(terraformVersion)
     azureServiceConnection: $(azureServiceConnection)

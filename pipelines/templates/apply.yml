@@ -8,6 +8,10 @@ parameters:
   - name: workingDirectory
     type: string
 
+  - name: applyBranch
+    type: string
+    default: 'refs/heads/develop'
+
 stages:
 - stage: Apply
   displayName: "Terraform Apply"
@@ -16,7 +20,7 @@ stages:
   condition: |
     and(
       succeeded(),
-      eq(variables['Build.SourceBranch'], 'refs/heads/develop')
+      eq(variables['Build.SourceBranch'], '${{ parameters.applyBranch }}')
     )
 
   jobs:
