@@ -17,7 +17,7 @@ variables:
     value: 'environments/bootstrap'
 
   - name: keyVaultName
-    value: 'kv-ht-boot-cin-01'
+    value: 'kv-ht-boot-p-cin-01'
 
   - name: infracostSecretName
     value: 'INFRACOST-API-KEY'
