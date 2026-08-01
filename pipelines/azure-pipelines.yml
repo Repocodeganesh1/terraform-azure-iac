@@ -1,9 +1,4 @@
-trigger:
-  branches:
-    include:
-      - develop
-      - main
-      - feature/*
+trigger: none
 
 pr: none
 
@@ -17,8 +12,8 @@ variables:
   - name: workingDirectory
     value: 'environments/bootstrap'
 
-  - name: applyBranch
-    value: 'refs/heads/develop'
+  #- name: applyBranch
+  #  value: 'refs/heads/develop'
 
 pool:
   vmImage: ubuntu-latest

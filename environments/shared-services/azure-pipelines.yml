@@ -20,8 +20,8 @@ variables:
   - name: workingDirectory
     value: 'environments/shared-services'
 
-  - name: applyBranch
-    value: 'refs/heads/develop'
+  #- name: applyBranch
+   # value: 'refs/heads/develop'
 
 pool:
   vmImage: ubuntu-latest
@@ -45,4 +45,4 @@ stages:
     terraformVersion: $(terraformVersion)
     azureServiceConnection: $(azureServiceConnection)
     workingDirectory: $(workingDirectory)
-    applyBranch: $(applyBranch)
+    #applyBranch: $(applyBranch)
