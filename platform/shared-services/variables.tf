@@ -110,3 +110,16 @@ variable "private_dns_zone_name" {
   type        = string
   default     = "privatelink.vaultcore.azure.net"
 }
+
+variable "hub_resource_group_name" {
+  description = "Name of the Hub resource group for peering lookup."
+  type        = string
+  default     = "rg-ht-hub-p-cin-01"
+}
+
+variable "hub_vnet_name" {
+  description = "Name of the Hub virtual network for peering lookup."
+  type        = string
+  default     = "vnet-ht-hub-p-cin-01"
+}
+
