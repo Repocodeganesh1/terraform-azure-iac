@@ -155,7 +155,7 @@ module "shared_service_plan" {
 }
 
 ############################################
-# VNet Peering to Hub
+# VNet Peering to Hub->
 ############################################
 
 data "azurerm_resource_group" "hub" {
