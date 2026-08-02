@@ -8,9 +8,6 @@ parameters:
   - name: workingDirectory
     type: string
 
-  - name: varFile
-    type: string
-    default: ''
 
 stages:
 - stage: Plan
@@ -70,15 +67,8 @@ stages:
         scriptLocation: inlineScript
         workingDirectory: ${{ parameters.workingDirectory }}
         inlineScript: |
-          VAR_FILE_ARG=""
-          if [ -n "${{ parameters.varFile }}" ]; then
-            VAR_FILE_ARG="-var-file=${{ parameters.varFile }}"
-          elif [ -f "prod.tfvars" ]; then
-            VAR_FILE_ARG="-var-file=prod.tfvars"
-          fi
-
           terraform plan \
-            $VAR_FILE_ARG \
+            -var-file=prod.tfvars \
             -lock=true \
             -out=tfplan.binary
 
