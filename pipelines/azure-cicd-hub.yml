@@ -1,9 +1,4 @@
-trigger:
-  branches:
-    include:
-      - develop
-      - main
-      - feature/*
+trigger: none
 
 variables:
   - name: terraformVersion

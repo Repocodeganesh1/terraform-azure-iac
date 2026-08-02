@@ -8,26 +8,26 @@ parameters:
   - name: workingDirectory
     type: string
 
-  - name: applyBranch
-    type: string
-    default: 'refs/heads/develop'
+  #- name: applyBranch
+  #  type: string
+  #  default: 'refs/heads/develop'
 
 stages:
 - stage: Apply
   displayName: "Terraform Apply"
   dependsOn: Plan
 
-  condition: |
-    and(
-      succeeded(),
-      eq(variables['Build.SourceBranch'], '${{ parameters.applyBranch }}')
-    )
+  #condition: |
+   # and(
+    #  succeeded(),
+     # eq(variables['Build.SourceBranch'], '${{ parameters.applyBranch }}')
+    #)
 
   jobs:
   - deployment: Apply
     displayName: "Apply Terraform Changes"
 
-    environment: bootstrap
+    environment: prod
 
     strategy:
       runOnce:

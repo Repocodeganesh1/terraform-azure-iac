@@ -1,24 +1,27 @@
 trigger:
   branches:
     include:
-      - develop
       - main
-      - feature/*
+      - develop
 
-pr: none
+pr:
+  branches:
+    include:
+      - main
+      - develop
 
 variables:
   - name: terraformVersion
     value: '1.15.8'
 
   - name: azureServiceConnection
-    value: 'bootstrap'
+    value: 'shared-services'
 
   - name: workingDirectory
-    value: 'environments/bootstrap'
+    value: 'environments/shared-services'
 
-  - name: applyBranch
-    value: 'refs/heads/develop'
+  #- name: applyBranch
+   # value: 'refs/heads/develop'
 
 pool:
   vmImage: ubuntu-latest
@@ -42,4 +45,4 @@ stages:
     terraformVersion: $(terraformVersion)
     azureServiceConnection: $(azureServiceConnection)
     workingDirectory: $(workingDirectory)
-    applyBranch: $(applyBranch)
+    #applyBranch: $(applyBranch)

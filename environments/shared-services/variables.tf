@@ -1,7 +1,7 @@
 variable "subscription_id" {
   description = "Azure subscription ID for the shared services environment."
   type        = string
-  default     = "7689ad81-71ba-481b-a17c-e1b6be61bab1"
+  default     = "859a785c-bd38-402d-b595-1f44f40fb9bf"
 }
 
 variable "location" {
