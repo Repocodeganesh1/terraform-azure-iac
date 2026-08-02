@@ -66,4 +66,4 @@ variable "tfstate_container_name" {
   description = "Name of the blob container that will hold Terraform state."
   type        = string
   default     = "tfstate"
-}
+}

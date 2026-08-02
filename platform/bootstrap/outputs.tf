@@ -11,4 +11,4 @@ output "storage_account_name" {
 output "storage_container_name" {
   description = "Terraform state container name."
   value       = azurerm_storage_container.tfstate_new.name
-}
+}
