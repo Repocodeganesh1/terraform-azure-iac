@@ -30,16 +30,6 @@ module "bootstrap_st_name" {
   instance       = var.instance
 }
 
-module "bootstrap_kv_name" {
-  source = "../../modules/naming"
-
-  resource_type  = "kv"
-  project        = var.project
-  workload       = var.workload
-  environment    = var.environment
-  location_short = var.location_short
-  instance       = var.instance
-}
 
 ############################################
 # New Bootstrap
@@ -80,19 +70,4 @@ resource "azurerm_storage_container" "tfstate_new" {
   name                  = var.tfstate_container_name
   storage_account_id    = azurerm_storage_account.tfstate_new.id
   container_access_type = "private"
-}
-
-module "key_vault_new" {
-  source = "../../modules/key_vault"
-
-  name                          = module.bootstrap_kv_name.name
-  resource_group_name           = azurerm_resource_group.bootstrap_new.name
-  location                      = azurerm_resource_group.bootstrap_new.location
-  tenant_id                     = data.azurerm_client_config.current.tenant_id
-  sku_name                      = var.key_vault_sku_name
-  enable_rbac_authorization     = true
-  public_network_access_enabled = true
-  soft_delete_retention_days    = 7
-  purge_protection_enabled      = var.key_vault_purge_protection_enabled
-  tags                          = local.tags
-}
+}
