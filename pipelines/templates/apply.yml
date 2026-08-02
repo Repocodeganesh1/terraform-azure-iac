@@ -27,7 +27,7 @@ stages:
   - deployment: Apply
     displayName: "Apply Terraform Changes"
 
-    environment: bootstrap
+    environment: prod
 
     strategy:
       runOnce:

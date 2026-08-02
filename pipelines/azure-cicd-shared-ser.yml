@@ -28,19 +28,19 @@ pool:
 
 stages:
 
-- template: ../../pipelines/templates/validate.yml
+- template: templates/validate.yml
   parameters:
     terraformVersion: $(terraformVersion)
     azureServiceConnection: $(azureServiceConnection)
     workingDirectory: $(workingDirectory)
 
-- template: ../../pipelines/templates/plan.yml
+- template: templates/plan.yml
   parameters:
     terraformVersion: $(terraformVersion)
     azureServiceConnection: $(azureServiceConnection)
     workingDirectory: $(workingDirectory)
 
-- template: ../../pipelines/templates/apply.yml
+- template: templates/apply.yml
   parameters:
     terraformVersion: $(terraformVersion)
     azureServiceConnection: $(azureServiceConnection)
