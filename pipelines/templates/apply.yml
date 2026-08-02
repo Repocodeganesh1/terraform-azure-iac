@@ -8,26 +8,23 @@ parameters:
   - name: workingDirectory
     type: string
 
-  #- name: applyBranch
-  #  type: string
-  #  default: 'refs/heads/develop'
+  - name: environmentName
+    type: string
+    default: 'prod'
 
 stages:
 - stage: Apply
   displayName: "Terraform Apply"
   dependsOn: Plan
 
-  #condition: |
-   # and(
-    #  succeeded(),
-     # eq(variables['Build.SourceBranch'], '${{ parameters.applyBranch }}')
-    #)
+  # Only run Apply on direct branch pushes/merges (never on Pull Request validation runs)
+  condition: and(succeeded(), ne(variables['Build.Reason'], 'PullRequest'))
 
   jobs:
   - deployment: Apply
     displayName: "Apply Terraform Changes"
 
-    environment: prod
+    environment: ${{ parameters.environmentName }}
 
     strategy:
       runOnce:
@@ -49,9 +46,9 @@ stages:
           - task: Cache@2
             displayName: Cache Terraform Providers
             inputs:
-              key: 'terraform | "$(Agent.OS)" | ${{ parameters.workingDirectory }}/.terraform.lock.hcl'
+              key: 'terraform-providers | "$(Agent.OS)"'
               restoreKeys: |
-                terraform | "$(Agent.OS)"
+                terraform-providers | "$(Agent.OS)"
               path: $(Pipeline.Workspace)/.terraform.d/plugin-cache
 
           - script: |

@@ -15,7 +15,6 @@ parameters:
 stages:
 - stage: Plan
   displayName: "Terraform Plan"
-  dependsOn: Validate
 
   jobs:
   - job: Plan
@@ -34,9 +33,9 @@ stages:
     - task: Cache@2
       displayName: Cache Terraform Providers
       inputs:
-        key: 'terraform | "$(Agent.OS)" | ${{ parameters.workingDirectory }}/.terraform.lock.hcl'
+        key: 'terraform-providers | "$(Agent.OS)"'
         restoreKeys: |
-          terraform | "$(Agent.OS)"
+          terraform-providers | "$(Agent.OS)"
         path: $(Pipeline.Workspace)/.terraform.d/plugin-cache
 
     - script: |
@@ -48,7 +47,7 @@ stages:
       displayName: Configure Terraform Plugin Cache
 
     - task: AzureCLI@2
-      displayName: Terraform Init
+      displayName: Terraform Init & Validate
       inputs:
         azureSubscription: ${{ parameters.azureServiceConnection }}
         scriptType: bash
@@ -59,6 +58,9 @@ stages:
             -reconfigure \
             -backend-config=backend.hcl \
             -input=false
+
+          terraform fmt -check -recursive
+          terraform validate
 
     - task: AzureCLI@2
       displayName: Terraform Plan
