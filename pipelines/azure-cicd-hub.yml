@@ -1,4 +1,26 @@
-trigger: none
+trigger:
+  branches:
+    include:
+      - main
+      - develop
+  paths:
+    include:
+      - platform/hub/**
+      - pipelines/azure-cicd-hub.yml
+    exclude:
+      - '**/*.md'
+
+pr:
+  branches:
+    include:
+      - main
+      - develop
+  paths:
+    include:
+      - platform/hub/**
+      - pipelines/azure-cicd-hub.yml
+    exclude:
+      - '**/*.md'
 
 variables:
   - name: terraformVersion
@@ -8,18 +30,13 @@ variables:
     value: 'hub-prod'
 
   - name: workingDirectory
-    value: 'environments/hub'
+    value: 'platform/hub'
+
 
 pool:
   vmImage: ubuntu-latest
 
 stages:
-
-- template: templates/validate.yml
-  parameters:
-    terraformVersion: $(terraformVersion)
-    azureServiceConnection: $(azureServiceConnection)
-    workingDirectory: $(workingDirectory)
 
 - template: templates/plan.yml
   parameters:
@@ -32,3 +49,4 @@ stages:
     terraformVersion: $(terraformVersion)
     azureServiceConnection: $(azureServiceConnection)
     workingDirectory: $(workingDirectory)
+    environmentName: 'hub-prod'

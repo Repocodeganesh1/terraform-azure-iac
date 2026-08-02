@@ -3,12 +3,24 @@ trigger:
     include:
       - main
       - develop
+  paths:
+    include:
+      - platform/shared-services/**
+      - pipelines/azure-cicd-shared-ser.yml
+    exclude:
+      - '**/*.md'
 
 pr:
   branches:
     include:
       - main
       - develop
+  paths:
+    include:
+      - platform/shared-services/**
+      - pipelines/azure-cicd-shared-ser.yml
+    exclude:
+      - '**/*.md'
 
 variables:
   - name: terraformVersion
@@ -18,21 +30,13 @@ variables:
     value: 'shared-services'
 
   - name: workingDirectory
-    value: 'environments/shared-services'
+    value: 'platform/shared-services'
 
-  #- name: applyBranch
-   # value: 'refs/heads/develop'
 
 pool:
   vmImage: ubuntu-latest
 
 stages:
-
-- template: templates/validate.yml
-  parameters:
-    terraformVersion: $(terraformVersion)
-    azureServiceConnection: $(azureServiceConnection)
-    workingDirectory: $(workingDirectory)
 
 - template: templates/plan.yml
   parameters:
@@ -45,4 +49,4 @@ stages:
     terraformVersion: $(terraformVersion)
     azureServiceConnection: $(azureServiceConnection)
     workingDirectory: $(workingDirectory)
-    #applyBranch: $(applyBranch)
+    environmentName: 'shared-services-prod'

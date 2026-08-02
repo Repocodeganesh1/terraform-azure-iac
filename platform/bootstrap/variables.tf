@@ -33,11 +33,6 @@ variable "workload" {
   default     = "boot"
 }
 
-variable "key_vault_name" {
-  description = "existing Key Vault name."
-  type        = string
-}
-
 variable "environment" {
   description = "Environment code (d = dev, p = prod)."
   type        = string
@@ -71,16 +66,4 @@ variable "tfstate_container_name" {
   description = "Name of the blob container that will hold Terraform state."
   type        = string
   default     = "tfstate"
-}
-
-variable "key_vault_sku_name" {
-  description = "SKU to use for the Key Vault."
-  type        = string
-  default     = "standard"
-}
-
-variable "key_vault_purge_protection_enabled" {
-  description = "Whether purge protection is enabled on the Key Vault."
-  type        = bool
-  default     = false
 }
