@@ -159,10 +159,12 @@ module "shared_service_plan" {
 ############################################
 
 data "azurerm_resource_group" "hub" {
-  name = var.hub_resource_group_name
+  provider = azurerm.hub
+  name     = var.hub_resource_group_name
 }
 
 data "azurerm_virtual_network" "hub" {
+  provider            = azurerm.hub
   name                = var.hub_vnet_name
   resource_group_name = data.azurerm_resource_group.hub.name
 }
