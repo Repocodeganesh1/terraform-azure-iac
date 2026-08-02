@@ -172,6 +172,11 @@ data "azurerm_virtual_network" "hub" {
 module "shared_to_hub_peering" {
   source = "../../modules/vnet_peering"
 
+  providers = {
+    azurerm.vnet_1 = azurerm
+    azurerm.vnet_2 = azurerm.hub
+  }
+
   vnet_1_name = module.shared_vnet.vnet_name
   vnet_1_rg   = azurerm_resource_group.shared_services.name
   vnet_1_id   = module.shared_vnet.vnet_id
