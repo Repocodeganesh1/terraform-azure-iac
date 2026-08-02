@@ -8,7 +8,10 @@ variables:
     value: 'hub-prod'
 
   - name: workingDirectory
-    value: 'environments/hub'
+    value: 'platform/hub'
+
+  - name: varFile
+    value: 'prod.tfvars'
 
 pool:
   vmImage: ubuntu-latest
@@ -26,6 +29,7 @@ stages:
     terraformVersion: $(terraformVersion)
     azureServiceConnection: $(azureServiceConnection)
     workingDirectory: $(workingDirectory)
+    varFile: $(varFile)
 
 - template: templates/apply.yml
   parameters:

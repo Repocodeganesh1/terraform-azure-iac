@@ -18,10 +18,10 @@ variables:
     value: 'shared-services'
 
   - name: workingDirectory
-    value: 'environments/shared-services'
+    value: 'platform/shared-services'
 
-  #- name: applyBranch
-   # value: 'refs/heads/develop'
+  - name: varFile
+    value: 'prod.tfvars'
 
 pool:
   vmImage: ubuntu-latest
@@ -39,6 +39,7 @@ stages:
     terraformVersion: $(terraformVersion)
     azureServiceConnection: $(azureServiceConnection)
     workingDirectory: $(workingDirectory)
+    varFile: $(varFile)
 
 - template: templates/apply.yml
   parameters:

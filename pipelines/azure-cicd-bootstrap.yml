@@ -10,7 +10,7 @@ variables:
     value: 'bootstrap'
 
   - name: workingDirectory
-    value: 'environments/bootstrap'
+    value: 'platform/bootstrap'
 
   #- name: applyBranch
   #  value: 'refs/heads/develop'

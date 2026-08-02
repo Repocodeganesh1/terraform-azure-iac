@@ -14,18 +14,20 @@ An enterprise-grade, cost-optimized **Azure Landing Zone** built with **Terrafor
 
 ## 🏗️ Architecture & Folder Structure
 
-This repository follows a **Multi-Root Terraform State** pattern aligned with the Microsoft Cloud Adoption Framework (CAF) Hub-and-Spoke model:
+This repository follows the **Microsoft Cloud Adoption Framework (CAF) Enterprise Pattern** using isolated, multi-root Terraform state files:
 
 ```
 terraform-azure-iac/
-├── docs/                 # Architecture diagrams, deployment guides & documentation
-│   └── architecture.md   # Layered landing zone architecture details
-├── environments/         # Layered, state-isolated Terraform root modules
+├── PROMPTS.md            # Project vision, prompts history & engineering guidelines
+├── README.md             # Consolidated primary documentation
+├── docs/                 # Architecture documentation
+│   └── architecture.md   # Layered landing zone design details
+├── platform/             # Core shared platform infrastructure (Central IT / DevOps)
 │   ├── bootstrap/        # Step 1: Remote Terraform state storage & Key Vault
-│   ├── hub/              # Step 2: Hub networking & central connectivity
-│   ├── shared-services/  # Step 3: Platform services (APIM AI Gateway, LAW, DNS)
-│   ├── app1/             # Step 4: Spoke application landing zone (Dev/Prod)
-│   └── app2/             # Step 4: Additional workload landing zone placeholder
+│   ├── hub/              # Step 2: Central Hub VNet & connectivity
+│   └── shared-services/  # Step 3: Platform services (APIM AI Gateway, LAW, DNS)
+├── workloads/            # Application & AI workload spokes
+│   └── app1/             # AI workload landing zone (configured with prod.tfvars)
 ├── modules/              # Reusable Terraform wrapper modules
 │   ├── naming/           # Standardized Azure resource naming helper
 │   ├── network/          # Virtual Network & Subnet management
@@ -33,8 +35,7 @@ terraform-azure-iac/
 │   ├── log_analytics/    # Log Analytics Workspace for telemetry & traces
 │   ├── api_management/   # APIM for AI prompt caching & rate-limiting
 │   ├── private_dns_zone/ # Azure Private DNS Zones
-│   ├── service_plan/     # Linux App Service Plans
-│   └── common/           # Common utilities & metadata
+│   └── service_plan/     # Linux App Service Plans
 └── pipelines/            # Automated Azure DevOps CI/CD Workflows
     ├── azure-cicd-bootstrap.yml
     ├── azure-cicd-hub.yml
@@ -63,10 +64,10 @@ To practice AI Platform Engineering without high monthly cloud bills, resources 
 
 To deploy this landing zone sequentially, follow these steps:
 
-1. **Bootstrap Layer** ([environments/bootstrap](file:///c:/Users/RichT/OneDrive/Documents/Repos/terraform-azure-iac/environments/bootstrap)): Deploy remote state storage and backend key vault.
-2. **Hub Network Layer** ([environments/hub](file:///c:/Users/RichT/OneDrive/Documents/Repos/terraform-azure-iac/environments/hub)): Provision central VNet, subnets, and routing.
-3. **Shared Services Layer** ([environments/shared-services](file:///c:/Users/RichT/OneDrive/Documents/Repos/terraform-azure-iac/environments/shared-services)): Provision APIM, Log Analytics, and core services.
-4. **AI Workloads / Spokes**: Provision spoke VNets, Azure OpenAI endpoints, and AI Search.
+1. **Bootstrap Layer** ([platform/bootstrap](file:///c:/Users/RichT/OneDrive/Documents/Repos/terraform-azure-iac/platform/bootstrap)): Deploy remote state storage and backend key vault.
+2. **Hub Network Layer** ([platform/hub](file:///c:/Users/RichT/OneDrive/Documents/Repos/terraform-azure-iac/platform/hub)): Provision central VNet, subnets, and routing.
+3. **Shared Services Layer** ([platform/shared-services](file:///c:/Users/RichT/OneDrive/Documents/Repos/terraform-azure-iac/platform/shared-services)): Provision APIM, Log Analytics, and core services.
+4. **AI Workloads Layer** ([workloads/app1](file:///c:/Users/RichT/OneDrive/Documents/Repos/terraform-azure-iac/workloads/app1)): Provision spoke VNets, Azure OpenAI endpoints, and AI Search using `prod.tfvars`.
 
 ---
 
@@ -80,8 +81,9 @@ To deploy this landing zone sequentially, follow these steps:
 
 ## 🚀 CI/CD Pipeline Execution
 
-Azure DevOps pipelines are located under `pipelines/`. Each layer executes through a 3-stage validation pipeline:
+Azure DevOps pipelines are located under `pipelines/`. Each layer executes through a 3-stage validation pipeline using `prod.tfvars`:
 1. **Validate**: Syntax and format validation (`terraform fmt`, `terraform validate`).
-2. **Plan**: Speculative state analysis (`terraform plan`).
+2. **Plan**: Speculative state analysis using `-var-file=prod.tfvars` (`terraform plan`).
 3. **Apply**: Automated deployment after approval (`terraform apply`).
+
 
