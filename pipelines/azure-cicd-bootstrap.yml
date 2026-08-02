@@ -37,4 +37,4 @@ stages:
     terraformVersion: $(terraformVersion)
     azureServiceConnection: $(azureServiceConnection)
     workingDirectory: $(workingDirectory)
-    applyBranch: $(applyBranch)
+    #applyBranch: $(applyBranch)
