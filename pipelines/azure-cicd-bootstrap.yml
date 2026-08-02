@@ -1,6 +1,9 @@
-trigger: none
+trigger:
+  branches:
+    include:
+      - develop
 
-pr: none
+# pr: none
 
 variables:
   - name: terraformVersion
