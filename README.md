@@ -7,8 +7,21 @@ An enterprise-grade, cost-optimized **Azure Landing Zone** built with **Terrafor
 ## 🎯 Project Objectives
 
 1. **Hands-On Azure DevOps & IaC Practice**: Build an Enterprise Azure Landing Zone from scratch using modular Terraform code and automated Azure DevOps CI/CD pipelines.
-2. **AI Platform Infrastructure**: Prepare enterprise-grade foundation for AI/LLM workloads, including AI API Gateways, Vector Search, and Secure Managed Identities.
+2. **AI Platform Infrastructure**: Prepare an enterprise-grade foundation for AI/LLM workloads, including AI API Gateways, Vector Search, and Secure Managed Identities.
 3. **Cost-Optimized Architecture**: Designed for sandbox and mini-projects using **Pay-As-You-Go**, **Serverless**, and **Free-Tier** SKUs to keep running costs near zero when idle.
+
+---
+
+## 🔑 Subscriptions & Service Connection Mapping
+
+This repository is configured across 4 dedicated Azure Subscriptions using **Workload Identity Federation (OIDC)** via Azure DevOps:
+
+| Scope / Tier | Azure Subscription Name | Subscription ID | Azure DevOps Service Connection | Workload Target |
+| :--- | :--- | :--- | :--- | :--- |
+| **Bootstrap** | `bootstrap` | `7689ad81-71ba-481b-a17c-e1b6be61bab1` | `bootstrap` | Remote Terraform backend storage (`sthtbootpcin01`) |
+| **Hub Network** | `Hub-prod` | `3eb8cc01-50c6-473e-8d5f-f8d532ae1f5b` | `hub-prod` | Hub VNet (`vnet-ht-hub-p-cin-01`) & central routing |
+| **Shared Services** | `Shared-services` | `859a785c-bd38-402d-b595-1f44f40fb9bf` | `shared-services` | Log Analytics, APIM Gateway, Private DNS Zones |
+| **Apps (AI Workloads)**| `Apps-prod` | `f4ffefe1-d689-4059-969c-ccc73e2a11d4` | `app-prod` | AI Assistant (`workloads/ai-assistant`), OpenAI, AI Search |
 
 ---
 
@@ -18,17 +31,20 @@ This repository follows the **Microsoft Cloud Adoption Framework (CAF) Enterpris
 
 ```
 terraform-azure-iac/
-├── PROMPTS.md            # Project vision, prompts history & engineering guidelines
-├── README.md             # Consolidated primary documentation
+├── AGENTS.md             # AI Agent rules, context & subscription matrix
+├── ROADMAP.md            # Project progress, sprint status & phase breakdown
+├── README.md             # Primary repository documentation
 ├── docs/                 # Architecture documentation
-│   └── architecture.md   # Layered landing zone design details
+│   └── architecture.md   # Layered landing zone design & network details
 ├── platform/             # Core shared platform infrastructure (Central IT / DevOps)
 │   ├── bootstrap/        # Step 1: Remote Terraform state storage & Key Vault
 │   ├── hub/              # Step 2: Central Hub VNet & connectivity
 │   └── shared-services/  # Step 3: Platform services (APIM AI Gateway, LAW, DNS)
 ├── workloads/            # Application & AI workload spokes
-│   └── app1/             # AI workload landing zone (configured with prod.tfvars)
+│   └── ai-assistant/     # AI assistant workload spoke (configured with prod.tfvars)
 ├── modules/              # Reusable Terraform wrapper modules
+│   ├── function_app/     # Linux Function App AVM wrapper
+│   ├── cognitive_account/# Azure Cognitive / OpenAI wrapper
 │   ├── naming/           # Standardized Azure resource naming helper
 │   ├── network/          # Virtual Network & Subnet management
 │   ├── key_vault/        # Azure Key Vault with RBAC authorization
@@ -40,6 +56,7 @@ terraform-azure-iac/
     ├── azure-cicd-bootstrap.yml
     ├── azure-cicd-hub.yml
     ├── azure-cicd-shared-ser.yml
+    ├── azure-cicd-ai-assistant.yml
     └── templates/        # Reusable pipeline stages (validate, plan, apply)
 ```
 
@@ -67,7 +84,7 @@ To deploy this landing zone sequentially, follow these steps:
 1. **Bootstrap Layer** ([platform/bootstrap](file:///c:/Users/RichT/OneDrive/Documents/Repos/terraform-azure-iac/platform/bootstrap)): Deploy remote state storage and backend key vault.
 2. **Hub Network Layer** ([platform/hub](file:///c:/Users/RichT/OneDrive/Documents/Repos/terraform-azure-iac/platform/hub)): Provision central VNet, subnets, and routing.
 3. **Shared Services Layer** ([platform/shared-services](file:///c:/Users/RichT/OneDrive/Documents/Repos/terraform-azure-iac/platform/shared-services)): Provision APIM, Log Analytics, and core services.
-4. **AI Workloads Layer** ([workloads/app1](file:///c:/Users/RichT/OneDrive/Documents/Repos/terraform-azure-iac/workloads/app1)): Provision spoke VNets, Azure OpenAI endpoints, and AI Search using `prod.tfvars`.
+4. **AI Workloads Layer** ([workloads/ai-assistant](file:///c:/Users/RichT/OneDrive/Documents/Repos/terraform-azure-iac/workloads/ai-assistant)): Provision spoke VNets, Azure OpenAI endpoints, and AI Search using `prod.tfvars`.
 
 ---
 
@@ -85,5 +102,3 @@ Azure DevOps pipelines are located under `pipelines/`. Each layer executes throu
 1. **Validate**: Syntax and format validation (`terraform fmt`, `terraform validate`).
 2. **Plan**: Speculative state analysis using `-var-file=prod.tfvars` (`terraform plan`).
 3. **Apply**: Automated deployment after approval (`terraform apply`).
-
-
