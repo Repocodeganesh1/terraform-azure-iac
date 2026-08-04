@@ -274,6 +274,7 @@ module "function_app" {
     "COSMOS_DB_DATABASE"      = module.cosmos_db.database_name
     "COSMOS_DB_CONTAINER"     = module.cosmos_db.container_name
     "AZURE_SEARCH_ENDPOINT"   = module.search_service.endpoint
+    "AZURE_SEARCH_INDEX"      = "devonboard-docs"
     "RAG_DOCUMENTS_CONTAINER" = "documents"
     "APP_NAME"                = "DevOnboard AI"
     "APP_VERSION"             = "1.0.0"
