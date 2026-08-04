@@ -30,13 +30,6 @@ data "azurerm_api_management" "shared" {
   resource_group_name = data.azurerm_resource_group.shared.name
 }
 
-# Look up the shared App Service Plan from Shared Services
-data "azurerm_service_plan" "shared" {
-  provider            = azurerm.shared
-  name                = var.shared_asp_name
-  resource_group_name = data.azurerm_resource_group.shared.name
-}
-
 # Naming modules
 module "aiast_rg_name" {
   source = "../../modules/naming"
@@ -71,7 +64,16 @@ module "aiast_oai_name" {
   instance       = var.instance
 }
 
-# aiast_asp_name removed — using shared ASP from Shared Services (data.azurerm_service_plan.shared)
+module "aiast_asp_name" {
+  source = "../../modules/naming"
+
+  resource_type  = "asp"
+  project        = var.project
+  workload       = var.workload
+  environment    = var.environment
+  location_short = var.location_short
+  instance       = var.instance
+}
 
 module "aiast_st_name" {
   source = "../../modules/naming"
@@ -238,7 +240,17 @@ module "search_service" {
   tags = local.tags
 }
 
-# App Service Plan is sourced from Shared Services (data.azurerm_service_plan.shared — asp-ht-ss-p-cin-01)
+# App Service Plan for the workload Function App (Y1 Consumption — $0 idle)
+module "aiast_service_plan" {
+  source = "../../modules/service_plan"
+
+  name                = module.aiast_asp_name.name
+  location            = azurerm_resource_group.ai_assistant.location
+  resource_group_name = azurerm_resource_group.ai_assistant.name
+  os_type             = "Linux"
+  sku_name            = "Y1"
+  tags                = local.tags
+}
 
 # Serverless Function App via Function App Wrapper Module
 module "function_app" {
@@ -249,7 +261,7 @@ module "function_app" {
   resource_group_id          = azurerm_resource_group.ai_assistant.id
   resource_group_name        = azurerm_resource_group.ai_assistant.name
   storage_account_name       = module.aiast_st_name.name
-  service_plan_id            = data.azurerm_service_plan.shared.id
+  service_plan_id            = module.aiast_service_plan.id
   app_insights_name          = module.aiast_appi_name.name
   log_analytics_workspace_id = data.azurerm_log_analytics_workspace.shared.id
   python_version             = "3.11"

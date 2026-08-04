@@ -143,12 +143,6 @@ variable "shared_apim_name" {
   default     = "apim-ht-ss-p-cin-01"
 }
 
-variable "shared_asp_name" {
-  description = "Name of the shared App Service Plan in Shared Services to use for the Function App."
-  type        = string
-  default     = "asp-ht-ss-p-cin-01"
-}
-
 variable "openai_model_name" {
   description = "Name of the OpenAI model to deploy."
   type        = string
