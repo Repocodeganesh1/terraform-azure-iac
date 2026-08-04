@@ -24,6 +24,13 @@ The workload provisions DevOnboard AI infrastructure:
 - Application Insights connected to shared Log Analytics.
 - APIM backend registration in `Shared-services`.
 
+Current phase status:
+- `platform/bootstrap`: complete.
+- `platform/hub`: complete.
+- `platform/shared-services`: complete.
+- `workloads/ai-assistant`: in progress, active deployment testing.
+- `pipelines/`: active testing.
+
 ## Subscription Map
 
 | Scope | Subscription | Subscription ID | Azure DevOps service connection | Purpose |
@@ -44,6 +51,25 @@ Keep Terraform roots separate. Do not merge state:
 All `backend.hcl` files must point to the bootstrap subscription because remote state lives in `sthtbootpcin01`.
 
 The Azure DevOps service connection controls the deployment identity. The root `prod.tfvars` `subscription_id` controls where that root creates resources.
+
+## Naming Standard
+
+Use the CAF-style naming helper in `modules/naming`.
+
+Pattern:
+
+```text
+<resource-type>-<project>-<workload>-<environment>-<location-short>-<instance>
+```
+
+Examples:
+- `rg-ht-dvob-p-cin-01`
+- `vnet-ht-hub-p-cin-01`
+- `appi-ht-dvob-p-cin-01`
+
+Compact resource types, such as storage accounts, omit hyphens where Azure requires global DNS-compatible names:
+- `sthtbootpcin01`
+- `sthtdvobpcin01`
 
 ## Network And Region Notes
 
@@ -101,12 +127,23 @@ Deploy in this order:
 
 For the AI assistant root, rerun from `terraform init`, then `plan`, then `apply`.
 
+## Pipeline Notes
+
+Pipelines live under `pipelines/`:
+- `azure-cicd-bootstrap.yml` deploys `platform/bootstrap` with service connection `bootstrap`.
+- `azure-cicd-hub.yml` deploys `platform/hub` with service connection `hub-prod`.
+- `azure-cicd-shared-ser.yml` deploys `platform/shared-services` with service connection `shared-services`.
+- `azure-cicd-ai-assistant.yml` deploys `workloads/ai-assistant` with service connection `app-prod`.
+
+Expected flow:
+- PRs run format, validate, and plan.
+- Merges/direct commits run plan and then apply using the saved binary plan.
+- Documentation-only changes should not trigger Terraform pipelines.
+
+Every pipeline identity needs Storage Blob Data access to the bootstrap state storage account/container. Cross-subscription roots also need the relevant read/write RBAC in the referenced subscriptions.
+
 ## Documentation Map
 
-- `README.md`: human-facing overview.
+- `README.md`: human-facing overview and quick start.
 - `AGENTS.md`: concise agent rules and subscription matrix.
-- `docs/PROJECT_CONTEXT.md`: compact context for Codex and future troubleshooting.
-- `docs/architecture.md`: fuller architecture notes.
-- `ROADMAP.md`: phase tracking.
-- `docs/ai-assistant/DEVONBOARD_AI_PLAN.md`: app-specific plan.
-- `docs/ai-assistant/AI_PLATFORM_ENGINEER_GUIDE.md`: learning/curriculum guide.
+- `docs/PROJECT_CONTEXT.md`: canonical compact context for architecture, deployment, troubleshooting, and future Codex work.
