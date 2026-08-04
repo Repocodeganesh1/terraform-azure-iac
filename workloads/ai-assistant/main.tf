@@ -208,7 +208,7 @@ module "openai" {
       model_format  = "OpenAI"
       model_name    = var.openai_model_name
       model_version = var.openai_model_version
-      sku_name      = "Standard"
+      sku_name      = "GlobalStandard"
       sku_capacity  = 10 # 10k tokens/min cap – keeps cost near $0 idle
     }
   }
