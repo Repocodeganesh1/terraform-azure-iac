@@ -193,14 +193,19 @@ stages:
             --protocols https
 
           echo "Applying CORS policy at API scope..."
-          POLICY_XML='<policies><inbound><cors allow-credentials="true"><allowed-origins><origin>https://stapp-ht-dvob-p-cin-01.azurestaticapps.net</origin></allowed-origins><allowed-methods preflight-result-max-age="300"><method>GET</method><method>POST</method><method>OPTIONS</method></allowed-methods><allowed-headers><header>Authorization</header><header>Content-Type</header><header>Accept</header></allowed-headers></cors><set-backend-service base-url="'"$FUNC_URL"'" /><base /></inbound><backend><base /></backend><outbound><base /></outbound><on-error><base /></on-error></policies>'
+          cat << 'EOF' > /tmp/policy.json
+{
+  "properties": {
+    "value": "<policies><inbound><cors allow-credentials=\"true\"><allowed-origins><origin>https://stapp-ht-dvob-p-cin-01.azurestaticapps.net</origin></allowed-origins><allowed-methods preflight-result-max-age=\"300\"><method>GET</method><method>POST</method><method>OPTIONS</method></allowed-methods><allowed-headers><header>Authorization</header><header>Content-Type</header><header>Accept</header></allowed-headers></cors><set-backend-service base-url=\"https://func-ht-dvob-p-cin-01.azurewebsites.net/api\" /><base /></inbound><backend><base /></backend><outbound><base /></outbound><on-error><base /></on-error></policies>",
+    "format": "rawxml"
+  }
+}
+EOF
 
-          az apim api policy create \
-            --subscription "$APIM_SUB" \
-            --resource-group "$APIM_RG" \
-            --service-name "$APIM_NAME" \
-            --api-id "$API_ID" \
-            --value "$POLICY_XML" \
-            --format xml
+          az rest --method put \
+            --uri "https://management.azure.com/subscriptions/$APIM_SUB/resourceGroups/$APIM_RG/providers/Microsoft.ApiManagement/service/$APIM_NAME/apis/$API_ID/policies/policy?api-version=2022-08-01" \
+            --body "@/tmp/policy.json" \
+            --headers "Accept=application/json" \
+            --output none
 
           echo "APIM registration complete."
