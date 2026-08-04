@@ -88,3 +88,101 @@ stages:
         appName: 'func-ht-dvob-p-cin-01'
         package: '$(Build.ArtifactStagingDirectory)/functionapp.zip'
       displayName: 'Deploy to Function App'
+
+- stage: ApimRegistration
+  displayName: 'Register API in Shared APIM'
+  dependsOn: DeployBackend
+  jobs:
+  - job: RegisterApim
+    displayName: 'Import and Configure API in APIM'
+    steps:
+    - task: AzureCLI@2
+      displayName: 'Import Chat API into APIM'
+      inputs:
+        azureSubscription: '$(azureServiceConnection)'
+        scriptType: 'bash'
+        scriptLocation: 'inlineScript'
+        inlineScript: |
+          set -e
+
+          APIM_NAME="apim-ht-ss-p-cin-01"
+          APIM_RG="rg-ht-ss-p-cin-01"
+          APIM_SUB="859a785c-bd38-402d-b595-1f44f40fb9bf"
+          FUNC_URL="https://func-ht-dvob-p-cin-01.azurewebsites.net/api"
+          API_ID="dvob-ai-assistant"
+          API_PATH="ai-assistant"
+
+          echo "Creating OpenAPI spec..."
+          cat > /tmp/openapi.json << 'OPENAPI'
+          {
+            "openapi": "3.0.1",
+            "info": {
+              "title": "DevOnboard AI Assistant",
+              "description": "AI Assistant chat API backed by Azure OpenAI and AI Search",
+              "version": "1.0"
+            },
+            "paths": {
+              "/chat": {
+                "post": {
+                  "operationId": "chat-post",
+                  "summary": "Send a chat message to the AI assistant",
+                  "requestBody": {
+                    "required": true,
+                    "content": {
+                      "application/json": {
+                        "schema": {
+                          "type": "object",
+                          "properties": {
+                            "message": { "type": "string" }
+                          },
+                          "required": ["message"]
+                        }
+                      }
+                    }
+                  },
+                  "responses": {
+                    "200": {
+                      "description": "Successful chat response",
+                      "content": {
+                        "application/json": {
+                          "schema": {
+                            "type": "object",
+                            "properties": {
+                              "reply": { "type": "string" }
+                            }
+                          }
+                        }
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          }
+          OPENAPI
+
+          echo "Importing API into APIM..."
+          az apim api import \
+            --subscription "$APIM_SUB" \
+            --resource-group "$APIM_RG" \
+            --service-name "$APIM_NAME" \
+            --api-id "$API_ID" \
+            --display-name "DevOnboard AI Assistant" \
+            --path "$API_PATH" \
+            --specification-format OpenApi \
+            --specification-path /tmp/openapi.json \
+            --service-url "$FUNC_URL" \
+            --protocols https
+
+          echo "Applying CORS policy at API scope..."
+          POLICY_XML='<policies><inbound><cors allow-credentials="true"><allowed-origins><origin>https://stapp-ht-dvob-p-cin-01.azurestaticapps.net</origin></allowed-origins><allowed-methods preflight-result-max-age="300"><method>GET</method><method>POST</method><method>OPTIONS</method></allowed-methods><allowed-headers><header>Authorization</header><header>Content-Type</header><header>Accept</header></allowed-headers></cors><set-backend-service base-url="'"$FUNC_URL"'" /><base /></inbound><backend><base /></backend><outbound><base /></outbound><on-error><base /></on-error></policies>'
+
+          az apim api policy create \
+            --subscription "$APIM_SUB" \
+            --resource-group "$APIM_RG" \
+            --service-name "$APIM_NAME" \
+            --api-id "$API_ID" \
+            --value "$POLICY_XML" \
+            --format xml
+
+          echo "APIM registration complete."
