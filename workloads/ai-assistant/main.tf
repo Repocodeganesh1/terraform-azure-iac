@@ -371,11 +371,12 @@ resource "azurerm_api_management_policy" "frontend_cors" {
         <method>OPTIONS</method>
       </allowed-methods>
       <allowed-headers>
-        <header>*</header>
+        <header>Authorization</header>
+        <header>Content-Type</header>
+        <header>Accept</header>
+        <header>Origin</header>
+        <header>X-Requested-With</header>
       </allowed-headers>
-      <expose-headers>
-        <header>*</header>
-      </expose-headers>
     </cors>
     <base />
   </inbound>
