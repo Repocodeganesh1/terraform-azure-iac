@@ -25,6 +25,7 @@ pr:
 variables:
   - name: azureServiceConnection
     value: 'app-prod'
+  - group: shared-keyvault-secrets   # Key Vault: kv-ht-ss-p-cin-01 (SWA-CLI-DEPLOYMENT-TOKEN → SWA_CLI_DEPLOYMENT_TOKEN)
 
 pool:
   vmImage: ubuntu-latest
