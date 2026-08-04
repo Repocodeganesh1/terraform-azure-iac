@@ -354,42 +354,4 @@ resource "azurerm_static_web_app" "frontend" {
   tags = local.tags
 }
 
-# CORS policy on Shared APIM to allow requests from the Static Web App domain
-resource "azurerm_api_management_policy" "frontend_cors" {
-  provider          = azurerm.shared
-  api_management_id = data.azurerm_api_management.shared.id
-  xml_content       = <<XML
-<policies>
-  <inbound>
-    <cors allow-credentials="true">
-      <allowed-origins>
-        <origin>https://${azurerm_static_web_app.frontend.default_host_name}</origin>
-      </allowed-origins>
-      <allowed-methods preflight-result-max-age="300">
-        <method>GET</method>
-        <method>POST</method>
-        <method>OPTIONS</method>
-      </allowed-methods>
-      <allowed-headers>
-        <header>Authorization</header>
-        <header>Content-Type</header>
-        <header>Accept</header>
-        <header>Origin</header>
-        <header>X-Requested-With</header>
-      </allowed-headers>
-    </cors>
-    <base />
-  </inbound>
-  <backend>
-    <base />
-  </backend>
-  <outbound>
-    <base />
-  </outbound>
-  <on-error>
-    <base />
-  </on-error>
-</policies>
-XML
-}
 
