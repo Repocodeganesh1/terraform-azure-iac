@@ -38,10 +38,12 @@ This document tracks the progress, status, and upcoming phases of building the e
 * [x] Deploy Linux Function App (`func-ht-aiast-p-cin-01`) using AVM module (`Azure/avm-res-web-site/azurerm`).
 * [x] Wire System & User Assigned Managed Identities.
 * [ ] Provision Private Endpoints for Cognitive Account and Storage Account.
-* [ ] Set Azure DevOps Service Connection `app-prod` (Subscription: `f4ffefe1-d689-4059-969c-ccc73e2a11d4`).
+* [x] Set Azure DevOps Service Connection `app-prod` (Subscription: `f4ffefe1-d689-4059-969c-ccc73e2a11d4`, Workload Identity federation).
 
 ## 🔄 Phase 5: Automated CI/CD Pipelines (`pipelines/`)
 * [x] Create multi-stage validation (`validate.yml`, `plan.yml`, `apply.yml`).
-* [x] Configure pipeline triggers for `platform/bootstrap`, `platform/hub`, `platform/shared-services`.
+* [x] Configure pipeline triggers for `platform/bootstrap`, `platform/hub`, `platform/shared-services`, `workloads/ai-assistant`.
 * [x] Wire `azure-cicd-ai-assistant.yml` with `app-prod` service connection.
+* [ ] Grant pipeline federated identities **Storage Blob Data** access on bootstrap state account (`sthtbootpcin01`) for all four pipelines.
+* [ ] Grant **app-prod** federated identity cross-subscription RBAC (Hub-prod / Shared-services reads; APIM backend write in Shared-services).
 * [ ] Execute end-to-end automated deployment test via Azure DevOps.

@@ -60,6 +60,8 @@ terraform-azure-iac/
     └── templates/        # Reusable pipeline stages (validate, plan, apply)
 ```
 
+**Terraform roots vs `modules/`:** Directories under `platform/` and `workloads/` are separate Terraform roots—each has its own remote state and maps to a home Azure subscription (see table above). The `modules/` folder holds reusable wrappers only; they are not tied to a subscription until a root invokes them.
+
 ---
 
 ## 💰 Cost Efficiency & SKU Guide
