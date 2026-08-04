@@ -28,6 +28,12 @@ variable "openai_location_short" {
   default     = "sin"
 }
 
+variable "swa_location" {
+  description = "Azure region for Static Web App control plane (available: eastus2, centralus, westus2, westeurope, eastasia)."
+  type        = string
+  default     = "eastus2"
+}
+
 variable "company_name" {
   description = "Company name for tagging."
   type        = string

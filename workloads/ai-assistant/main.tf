@@ -346,7 +346,7 @@ resource "azurerm_api_management_backend" "openai_backend" {
 # Static Web App for AI Assistant React Frontend (Free tier)
 resource "azurerm_static_web_app" "frontend" {
   name                = module.aiast_stapp_name.name
-  location            = var.location
+  location            = var.swa_location
   resource_group_name = azurerm_resource_group.ai_assistant.name
   sku_tier            = "Free"
   sku_size            = "Free"

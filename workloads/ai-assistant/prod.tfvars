@@ -3,6 +3,7 @@ location                        = "centralindia"
 location_short                  = "cin"
 openai_location                 = "eastus"
 openai_location_short           = "eus"
+swa_location                    = "eastus2"
 project                         = "ht"
 workload                        = "dvob"
 environment                     = "p"
@@ -19,9 +20,10 @@ shared_law_name                 = "law-ht-ss-p-cin-01"
 shared_apim_name                = "apim-ht-ss-p-cin-01"
 
 # OpenAI Model configuration
-openai_model_name    = "gpt-4o-mini"
-openai_model_version = "2024-07-18" # If 2024-07-18 is deprecated in your region, update to an active version (e.g. 2024-07-18, 2024-08-06, or gpt-4o)
+openai_model_name    = "gpt-4o"
+openai_model_version = "2024-08-06"
 
 # Set to false if Azure DevOps Service Principal lacks 'Microsoft.Authorization/roleAssignments/write' RBAC on Apps-prod subscription
 enable_role_assignments = true
+
 
