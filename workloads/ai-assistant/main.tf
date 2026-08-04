@@ -328,6 +328,34 @@ resource "azurerm_role_assignment" "func_openai_user" {
   ]
 }
 
+# Role Assignment: Grant "Search Index Data Reader" to Function App System-Assigned Identity
+resource "azurerm_role_assignment" "func_search_reader" {
+  count                = var.enable_role_assignments ? 1 : 0
+  scope                = module.search_service.id
+  role_definition_name = "Search Index Data Reader"
+  principal_id         = module.function_app.principal_id
+
+  depends_on = [
+    time_sleep.wait_for_func_identity,
+    module.search_service
+  ]
+}
+
+# Role Assignment: Grant Cosmos DB Data Contributor to Function App System-Assigned Identity
+resource "azurerm_cosmosdb_sql_role_assignment" "func_cosmos_contributor" {
+  count               = var.enable_role_assignments ? 1 : 0
+  resource_group_name = azurerm_resource_group.ai_assistant.name
+  account_name        = module.cosmos_db.account_name
+  role_definition_id  = "${module.cosmos_db.id}/sqlRoleDefinitions/00000000-0000-0000-0000-000000000002"
+  principal_id        = module.function_app.principal_id
+  scope               = module.cosmos_db.id
+
+  depends_on = [
+    time_sleep.wait_for_func_identity,
+    module.cosmos_db
+  ]
+}
+
 # Register OpenAI Backend in Shared APIM
 resource "azurerm_api_management_backend" "openai_backend" {
   provider            = azurerm.shared
