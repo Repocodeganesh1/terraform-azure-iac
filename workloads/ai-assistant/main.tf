@@ -204,10 +204,10 @@ module "openai" {
   log_analytics_workspace_id = data.azurerm_log_analytics_workspace.shared.id
 
   deployments = {
-    "gpt-4o-mini" = {
+    (var.openai_model_name) = {
       model_format  = "OpenAI"
-      model_name    = "gpt-4o-mini"
-      model_version = "2024-07-18"
+      model_name    = var.openai_model_name
+      model_version = var.openai_model_version
       sku_name      = "GlobalStandard"
       sku_capacity  = 10 # 10k tokens/min cap – keeps cost near $0 idle
     }
@@ -304,6 +304,7 @@ resource "time_sleep" "wait_for_func_identity" {
 
 # Role Assignment: Grant "Storage Blob Data Contributor" to Function App System-Assigned Identity
 resource "azurerm_role_assignment" "func_blob_contributor" {
+  count                = var.enable_role_assignments ? 1 : 0
   scope                = module.function_app.storage_account_id
   role_definition_name = "Storage Blob Data Contributor"
   principal_id         = module.function_app.principal_id
@@ -315,6 +316,7 @@ resource "azurerm_role_assignment" "func_blob_contributor" {
 
 # Role Assignment: Grant "Cognitive Services OpenAI User" to Function App System-Assigned Identity
 resource "azurerm_role_assignment" "func_openai_user" {
+  count                = var.enable_role_assignments ? 1 : 0
   scope                = module.openai.id
   role_definition_name = "Cognitive Services OpenAI User"
   principal_id         = module.function_app.principal_id

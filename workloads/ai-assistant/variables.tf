@@ -136,3 +136,22 @@ variable "shared_apim_name" {
   type        = string
   default     = "apim-ht-ss-p-cin-01"
 }
+
+variable "openai_model_name" {
+  description = "Name of the OpenAI model to deploy."
+  type        = string
+  default     = "gpt-4o-mini"
+}
+
+variable "openai_model_version" {
+  description = "Version of the OpenAI model to deploy. Set to null or a valid non-deprecated version string."
+  type        = string
+  default     = "2024-07-18"
+}
+
+variable "enable_role_assignments" {
+  description = "Whether to create RBAC role assignments for Function App identity. Disable if service principal lacks Microsoft.Authorization/roleAssignments/write permission."
+  type        = bool
+  default     = true
+}
+
