@@ -146,13 +146,13 @@ variable "shared_apim_name" {
 variable "openai_model_name" {
   description = "Name of the OpenAI model to deploy."
   type        = string
-  default     = "gpt-4o-mini"
+  default     = "gpt-5-mini"
 }
 
 variable "openai_model_version" {
   description = "Version of the OpenAI model to deploy. Set to null or a valid non-deprecated version string."
   type        = string
-  default     = "2024-07-18"
+  default     = "2025-08-07"
 }
 
 variable "enable_role_assignments" {

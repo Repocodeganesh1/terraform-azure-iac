@@ -20,8 +20,8 @@ shared_law_name                 = "law-ht-ss-p-cin-01"
 shared_apim_name                = "apim-ht-ss-p-cin-01"
 
 # OpenAI Model configuration
-openai_model_name    = "gpt-4o"
-openai_model_version = "2024-05-13"
+openai_model_name    = "gpt-5-mini"
+openai_model_version = "2025-08-07"
 
 # Set to false if Azure DevOps Service Principal lacks 'Microsoft.Authorization/roleAssignments/write' RBAC on Apps-prod subscription
 enable_role_assignments = true

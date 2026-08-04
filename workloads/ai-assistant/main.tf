@@ -269,7 +269,7 @@ module "function_app" {
 
   app_settings = {
     "AZURE_OPENAI_ENDPOINT"   = module.openai.endpoint
-    "AZURE_OPENAI_MODEL"      = "gpt-4o-mini"
+    "AZURE_OPENAI_MODEL"      = "gpt-5-mini"
     "COSMOS_DB_ENDPOINT"      = module.cosmos_db.endpoint
     "COSMOS_DB_DATABASE"      = module.cosmos_db.database_name
     "COSMOS_DB_CONTAINER"     = module.cosmos_db.container_name
