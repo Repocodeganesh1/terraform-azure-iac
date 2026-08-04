@@ -208,7 +208,7 @@ module "openai" {
       model_format  = "OpenAI"
       model_name    = var.openai_model_name
       model_version = var.openai_model_version
-      sku_name      = "GlobalStandard"
+      sku_name      = "Standard"
       sku_capacity  = 10 # 10k tokens/min cap – keeps cost near $0 idle
     }
   }
@@ -361,11 +361,11 @@ resource "azurerm_api_management_policy" "frontend_cors" {
   xml_content       = <<XML
 <policies>
   <inbound>
-    <cors allow-credentials="false">
+    <cors allow-credentials="true">
       <allowed-origins>
         <origin>https://${azurerm_static_web_app.frontend.default_host_name}</origin>
       </allowed-origins>
-      <allowed-methods>
+      <allowed-methods preflight-result-max-age="300">
         <method>GET</method>
         <method>POST</method>
         <method>OPTIONS</method>
@@ -373,6 +373,9 @@ resource "azurerm_api_management_policy" "frontend_cors" {
       <allowed-headers>
         <header>*</header>
       </allowed-headers>
+      <expose-headers>
+        <header>*</header>
+      </expose-headers>
     </cors>
     <base />
   </inbound>
