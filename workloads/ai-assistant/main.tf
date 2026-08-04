@@ -361,22 +361,20 @@ resource "azurerm_api_management_policy" "frontend_cors" {
   xml_content       = <<XML
 <policies>
   <inbound>
-    <base />
-    <cors>
+    <cors allow-credentials="false">
       <allowed-origins>
         <origin>https://${azurerm_static_web_app.frontend.default_host_name}</origin>
       </allowed-origins>
       <allowed-methods>
-        <method>*</method>
+        <method>GET</method>
+        <method>POST</method>
+        <method>OPTIONS</method>
       </allowed-methods>
       <allowed-headers>
         <header>*</header>
       </allowed-headers>
-      <expose-headers>
-        <header>*</header>
-      </expose-headers>
-      <max-age>86400</max-age>
     </cors>
+    <base />
   </inbound>
   <backend>
     <base />

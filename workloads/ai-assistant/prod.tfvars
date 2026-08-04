@@ -21,7 +21,7 @@ shared_apim_name                = "apim-ht-ss-p-cin-01"
 
 # OpenAI Model configuration
 openai_model_name    = "gpt-4o"
-openai_model_version = "2024-08-06"
+openai_model_version = "2024-05-13"
 
 # Set to false if Azure DevOps Service Principal lacks 'Microsoft.Authorization/roleAssignments/write' RBAC on Apps-prod subscription
 enable_role_assignments = true
