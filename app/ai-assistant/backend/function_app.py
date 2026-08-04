@@ -211,7 +211,7 @@ def chat(req: func.HttpRequest) -> func.HttpResponse:
 
     except Exception as exc:
         logging.error(f"Unhandled error in /chat: {exc}", exc_info=True)
-        return _error_response("Internal server error. Please try again.", 500)
+        return _error_response(f"Internal error ({type(exc).__name__}): {str(exc)}", 500)
 
 
 # ─── Health check ─────────────────────────────────────────────────────────────
