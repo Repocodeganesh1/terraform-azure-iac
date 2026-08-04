@@ -32,6 +32,7 @@ module "function_app" {
   parent_id                = var.resource_group_id
   service_plan_resource_id = var.service_plan_id
   kind                     = "functionapp"
+  public_network_access_enabled = var.public_network_access_enabled
 
   # Application Insights – passed from the inline resource above
   application_insights_key               = azurerm_application_insights.this.instrumentation_key

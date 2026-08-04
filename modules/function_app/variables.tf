@@ -67,3 +67,9 @@ variable "tags" {
   type        = map(string)
   default     = {}
 }
+
+variable "public_network_access_enabled" {
+  description = "Controls whether public network access is enabled for the Function App."
+  type        = bool
+  default     = true
+}
