@@ -3,7 +3,7 @@ import ChatWindow from './components/ChatWindow';
 import InputBar from './components/InputBar';
 import { Bot, User } from 'lucide-react';
 
-const API_BASE_URL = import.meta.env.VITE_API_URL || 'https://apim-ht-ss-p-cin-01.azure-api.net/devonboard';
+const API_BASE_URL = import.meta.env.VITE_API_URL || 'https://apim-ht-ss-p-cin-01.azure-api.net/ai-assistant';
 
 export default function App() {
   const [messages, setMessages] = useState([
