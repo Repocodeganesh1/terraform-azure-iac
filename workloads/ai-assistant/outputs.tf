@@ -44,3 +44,14 @@ output "app_insights_instrumentation_key" {
   value       = module.function_app.app_insights_instrumentation_key
   sensitive   = true
 }
+
+output "cosmos_db_account_name" {
+  description = "Name of the Cosmos DB account."
+  value       = module.cosmos_db.name
+}
+
+output "cosmos_db_endpoint" {
+  description = "Endpoint URL of the Cosmos DB account."
+  value       = module.cosmos_db.endpoint
+}
+

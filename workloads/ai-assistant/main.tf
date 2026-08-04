@@ -108,6 +108,17 @@ module "aiast_appi_name" {
   instance       = var.instance
 }
 
+module "aiast_cosmos_name" {
+  source = "../../modules/naming"
+
+  resource_type  = "cosmos"
+  project        = var.project
+  workload       = var.workload
+  environment    = var.environment
+  location_short = var.location_short
+  instance       = var.instance
+}
+
 # Resource Group for DevOnboard AI workload
 resource "azurerm_resource_group" "ai_assistant" {
   name     = module.aiast_rg_name.name
@@ -175,10 +186,22 @@ module "openai" {
       model_format  = "OpenAI"
       model_name    = "gpt-4o-mini"
       model_version = "2024-07-18"
-      sku_name      = "Standard"
+      sku_name      = "GlobalStandard"
       sku_capacity  = 10 # 10k tokens/min cap – keeps cost near $0 idle
     }
   }
+
+  tags = local.tags
+}
+
+# Cosmos DB (NoSQL) Free Tier for AI chat memory and session history
+module "cosmos_db" {
+  source = "../../modules/cosmos_db"
+
+  name                = module.aiast_cosmos_name.name
+  location            = azurerm_resource_group.ai_assistant.location
+  resource_group_name = azurerm_resource_group.ai_assistant.name
+  enable_free_tier    = true
 
   tags = local.tags
 }
@@ -213,6 +236,9 @@ module "function_app" {
   app_settings = {
     "AZURE_OPENAI_ENDPOINT" = module.openai.endpoint
     "AZURE_OPENAI_MODEL"    = "gpt-4o-mini"
+    "COSMOS_DB_ENDPOINT"    = module.cosmos_db.endpoint
+    "COSMOS_DB_DATABASE"    = module.cosmos_db.database_name
+    "COSMOS_DB_CONTAINER"   = module.cosmos_db.container_name
     "APP_NAME"              = "DevOnboard AI"
     "APP_VERSION"           = "1.0.0"
   }
