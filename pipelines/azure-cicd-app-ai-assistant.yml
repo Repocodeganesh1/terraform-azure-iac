@@ -1,0 +1,90 @@
+trigger:
+  branches:
+    include:
+      - main
+      - develop
+  paths:
+    include:
+      - app/ai-assistant/**
+      - pipelines/azure-cicd-app-ai-assistant.yml
+    exclude:
+      - '**/*.md'
+
+pr:
+  branches:
+    include:
+      - main
+      - develop
+  paths:
+    include:
+      - app/ai-assistant/**
+      - pipelines/azure-cicd-app-ai-assistant.yml
+    exclude:
+      - '**/*.md'
+
+variables:
+  - name: azureServiceConnection
+    value: 'app-prod'
+
+pool:
+  vmImage: ubuntu-latest
+
+stages:
+
+- stage: DeployFrontend
+  displayName: 'Build and Deploy React Frontend'
+  jobs:
+  - job: BuildAndDeployFrontend
+    displayName: 'Deploy React UI to Azure Static Web App'
+    steps:
+    - task: NodeTool@0
+      inputs:
+        versionSpec: '18.x'
+      displayName: 'Install Node.js'
+
+    - script: |
+        cd app/ai-assistant/frontend
+        npm ci
+        npm run build
+      displayName: 'Build React UI'
+
+    - task: AzureStaticWebApp@0
+      inputs:
+        app_location: 'app/ai-assistant/frontend'
+        output_location: 'dist'
+        azure_static_web_apps_api_token: '$(SWA_CLI_DEPLOYMENT_TOKEN)'
+      displayName: 'Deploy to Static Web App'
+
+- stage: DeployBackend
+  displayName: 'Deploy Python Function App'
+  jobs:
+  - job: BuildAndDeployBackend
+    displayName: 'Package and Deploy Python Code'
+    steps:
+    - task: UsePythonVersion@0
+      inputs:
+        versionSpec: '3.11'
+      displayName: 'Use Python 3.11'
+
+    - script: |
+        cd app/ai-assistant/backend
+        python -m venv .venv
+        source .venv/bin/activate
+        pip install --target=".python_packages/lib/site-packages" -r requirements.txt
+      displayName: 'Install Python Dependencies'
+
+    - task: ArchiveFiles@2
+      inputs:
+        rootFolderOrFile: 'app/ai-assistant/backend'
+        includeRootFolder: false
+        archiveType: 'zip'
+        archiveFile: '$(Build.ArtifactStagingDirectory)/functionapp.zip'
+      displayName: 'Archive Function App Code'
+
+    - task: AzureFunctionApp@2
+      inputs:
+        connectedServiceNameARM: '$(azureServiceConnection)'
+        appType: 'functionAppLinux'
+        appName: 'func-ht-dvob-p-cin-01'
+        package: '$(Build.ArtifactStagingDirectory)/functionapp.zip'
+      displayName: 'Deploy to Function App'

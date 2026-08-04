@@ -130,6 +130,17 @@ module "aiast_srch_name" {
   instance       = var.instance
 }
 
+module "aiast_stapp_name" {
+  source = "../../modules/naming"
+
+  resource_type  = "stapp"
+  project        = var.project
+  workload       = var.workload
+  environment    = var.environment
+  location_short = var.location_short
+  instance       = var.instance
+}
+
 # Resource Group for DevOnboard AI workload
 resource "azurerm_resource_group" "ai_assistant" {
   name     = module.aiast_rg_name.name
@@ -329,3 +340,52 @@ resource "azurerm_api_management_backend" "openai_backend" {
     module.openai
   ]
 }
+
+# Static Web App for AI Assistant React Frontend (Free tier)
+resource "azurerm_static_web_app" "frontend" {
+  name                = module.aiast_stapp_name.name
+  location            = var.location
+  resource_group_name = azurerm_resource_group.ai_assistant.name
+  sku_tier            = "Free"
+  sku_size            = "Free"
+
+  tags = local.tags
+}
+
+# CORS policy on Shared APIM to allow requests from the Static Web App domain
+resource "azurerm_api_management_policy" "frontend_cors" {
+  provider          = azurerm.shared
+  api_management_id = data.azurerm_api_management.shared.id
+  xml_content       = <<XML
+<policies>
+  <inbound>
+    <base />
+    <cors>
+      <allowed-origins>
+        <origin>https://${azurerm_static_web_app.frontend.default_host_name}</origin>
+      </allowed-origins>
+      <allowed-methods>
+        <method>*</method>
+      </allowed-methods>
+      <allowed-headers>
+        <header>*</header>
+      </allowed-headers>
+      <expose-headers>
+        <header>*</header>
+      </expose-headers>
+      <max-age>86400</max-age>
+    </cors>
+  </inbound>
+  <backend>
+    <base />
+  </backend>
+  <outbound>
+    <base />
+  </outbound>
+  <on-error>
+    <base />
+  </on-error>
+</policies>
+XML
+}
+

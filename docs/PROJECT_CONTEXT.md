@@ -99,10 +99,17 @@ Private networking direction:
 - Model deployment: `gpt-4o-mini`, version `2024-07-18`, SKU `GlobalStandard`, capacity `10`
 - Cosmos DB (NoSQL): `cosmos-ht-dvob-p-cin-01` (Free Tier: 1,000 RU/s + 25 GB storage free)
 - AI Search: `srch-ht-dvob-p-cin-01` (Free Tier: 3 indexes, 50 MB vector/document storage free)
+- Static Web App (React Chat UI): `stapp-ht-dvob-p-cin-01` (Free Tier: 0.5 GB bandwidth, Entra ID auth)
 - RAG Document Storage: `documents` private blob container in `sthtdvobpcin01` + `Storage Blob Data Contributor` RBAC
-- APIM backend: `openai-backend-dvob` in Shared-services
+- APIM backend: `openai-backend-dvob` + Static Web App CORS policy in Shared-services
 
 The Function App wrapper uses Azure Verified Module `Azure/avm-res-web-site/azurerm` and must set `kind = "functionapp"`.
+
+## Application Code Structure
+
+Application source code is decoupled from Terraform IaC under `app/ai-assistant/`:
+- `app/ai-assistant/frontend/`: React Chat UI (Vite) with dark-mode glassmorphic theme and Entra ID auth (`staticwebapp.config.json`).
+- `app/ai-assistant/backend/`: Python Function App backend source (`function_app.py`, `host.json`, `requirements.txt`) exposing `POST /chat`.
 
 ## Important Recent Fixes
 
@@ -113,7 +120,9 @@ These fixes address Azure DevOps Terraform plan/apply failures seen on August 4,
 - Added explicit `depends_on` on storage container creation and APIM backend registration.
 - The workload no longer looks up `asp-ht-ss-p-cin-01` in Shared-services for the Function App.
 - The workload creates its own App Service Plan in `Apps-prod` using SKU `Y1`.
-- Azure OpenAI moved from `centralindia` to `southindia`.
+- Azure OpenAI moved from `centralindia` to `eastus` (`eus`) to resolve SKU `S0` unsupported location errors.
+- Added `azurerm_static_web_app` (Free SKU) to `workloads/ai-assistant/main.tf` with AzureRM v4.x attributes (`sku_tier`, `sku_size`, `default_host_name`).
+- Added APIM CORS policy using `api_management_id` targeting `data.azurerm_api_management.shared.id`.
 - VNet peering modules have explicit `depends_on` on the local VNet module to avoid subnet-update timing races.
 
 ## Known Warnings And Risks
@@ -128,7 +137,8 @@ Deploy in this order:
 1. `platform/bootstrap`
 2. `platform/hub`
 3. `platform/shared-services`
-4. `workloads/ai-assistant`
+4. `workloads/ai-assistant` (Terraform IaC)
+5. `app/ai-assistant` (Application Code CI/CD)
 
 For the AI assistant root, rerun from `terraform init`, then `plan`, then `apply`.
 
@@ -138,7 +148,8 @@ Pipelines live under `pipelines/`:
 - `azure-cicd-bootstrap.yml` deploys `platform/bootstrap` with service connection `bootstrap`.
 - `azure-cicd-hub.yml` deploys `platform/hub` with service connection `hub-prod`.
 - `azure-cicd-shared-ser.yml` deploys `platform/shared-services` with service connection `shared-services`.
-- `azure-cicd-ai-assistant.yml` deploys `workloads/ai-assistant` with service connection `app-prod`.
+- `azure-cicd-ai-assistant.yml` deploys `workloads/ai-assistant` (IaC) with service connection `app-prod`.
+- `azure-cicd-app-ai-assistant.yml` builds and deploys the React frontend (`AzureStaticWebApp@0`) and Python backend (`AzureFunctionApp@2`).
 
 Expected flow:
 - PRs run format, validate, and plan.

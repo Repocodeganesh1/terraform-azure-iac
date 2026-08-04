@@ -65,4 +65,21 @@ output "search_service_endpoint" {
   value       = module.search_service.endpoint
 }
 
+output "static_web_app_name" {
+  description = "Name of the Azure Static Web App."
+  value       = azurerm_static_web_app.frontend.name
+}
+
+output "static_web_app_url" {
+  description = "Default hostname for the Static Web App."
+  value       = azurerm_static_web_app.frontend.default_host_name
+}
+
+output "static_web_app_api_key" {
+  description = "Deployment token for Static Web App CI/CD."
+  value       = azurerm_static_web_app.frontend.api_key
+  sensitive   = true
+}
+
+
 
