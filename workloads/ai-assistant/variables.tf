@@ -16,6 +16,18 @@ variable "location_short" {
   default     = "cin"
 }
 
+variable "openai_location" {
+  description = "Azure region for the Azure OpenAI account. Keep separate from the workload region because model/SKU availability varies by region."
+  type        = string
+  default     = "southindia"
+}
+
+variable "openai_location_short" {
+  description = "Azure region short name for Azure OpenAI resources."
+  type        = string
+  default     = "sin"
+}
+
 variable "company_name" {
   description = "Company name for tagging."
   type        = string
@@ -111,12 +123,6 @@ variable "shared_resource_group_name" {
   description = "Name of Shared Services resource group."
   type        = string
   default     = "rg-ht-ss-p-cin-01"
-}
-
-variable "shared_service_plan_name" {
-  description = "Name of the shared App Service Plan."
-  type        = string
-  default     = "asp-ht-ss-p-cin-01"
 }
 
 variable "shared_law_name" {

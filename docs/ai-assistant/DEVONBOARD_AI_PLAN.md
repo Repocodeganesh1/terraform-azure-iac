@@ -50,7 +50,7 @@ DevOnboard AI delivers **instant, streaming AI answers** grounded in the reposit
                    │                           │
                    ▼                           ▼
  ┌────────────────────────────┐  ┌─────────────────────────────────────┐
- │ Azure AI Search (Free F1)  │  │ Azure OpenAI (cog-ht-dvob-p-cin-01) │
+ │ Azure AI Search (Free F1)  │  │ Azure OpenAI (oai-ht-dvob-p-sin-01) │
  │ • Indexes AGENTS.md        │  │ • Model: gpt-4o-mini                │
  │ • Indexes README.md        │  │ • TPM Cap: 10,000 tokens/min        │
  │ • Indexes architecture.md  │  │ • max_tokens per response: 250      │
@@ -69,7 +69,8 @@ All infrastructure is provisioned inside `workloads/ai-assistant/main.tf` using 
 | **Resource Group** | `azurerm_resource_group.ai_assistant` | `rg-ht-dvob-p-cin-01` | `Apps-prod` |
 | **Spoke VNet** | `module.aiast_vnet` | `vnet-ht-dvob-p-cin-01` | `Apps-prod` |
 | **VNet Peering** | `module.aiast_to_hub_peering` | Hub ↔ Spoke (bi-directional) | `Hub-prod` ↔ `Apps-prod` |
-| **Azure OpenAI** | `module.openai` | `cog-ht-dvob-p-cin-01` | `Apps-prod` |
+| **Azure OpenAI** | `module.openai` | `oai-ht-dvob-p-sin-01` | `Apps-prod` |
+| **Function App Plan** | `module.aiast_service_plan` | `asp-ht-dvob-p-cin-01` | `Apps-prod` |
 | **Function App** | `module.function_app` | `func-ht-dvob-p-cin-01` | `Apps-prod` |
 | **Storage Account** | `azurerm_storage_account` (inside function_app) | `sthtdvobpcin01` | `Apps-prod` |
 | **App Insights** | `azurerm_application_insights` (inside function_app) | `appi-ht-dvob-p-cin-01` | `Apps-prod` |
@@ -80,11 +81,10 @@ All infrastructure is provisioned inside `workloads/ai-assistant/main.tf` using 
 
 ## 🔗 Shared Services Cross-References (`platform/shared-services`)
 
-The DevOnboard AI workload **reads** (does not own) these shared resources:
+The DevOnboard AI workload **reads** (does not own) these shared resources. The Function App plan is now workload-owned in `Apps-prod`, not shared-services.
 
 | Shared Resource | Azure Name | Purpose |
 | :--- | :--- | :--- |
-| **App Service Plan** | `asp-ht-ss-p-cin-01` | Hosts the Python Function App (shared compute) |
 | **Log Analytics Workspace** | `law-ht-ss-p-cin-01` | Application Insights telemetry & token usage metrics |
 | **API Management** | `apim-ht-ss-p-cin-01` | Prompt caching, rate limiting & AI gateway |
 
@@ -155,7 +155,8 @@ To keep Azure OpenAI token usage minimal:
 - [x] Resource Group (`rg-ht-dvob-p-cin-01`)
 - [x] Spoke VNet (`vnet-ht-dvob-p-cin-01`, `10.40.0.0/16`)
 - [x] VNet Peering to Hub (`vnet-ht-hub-p-cin-01`)
-- [x] Azure OpenAI Account (`cog-ht-dvob-p-cin-01`, `gpt-4o-mini`)
+- [x] Azure OpenAI Account (`oai-ht-dvob-p-sin-01`, `gpt-4o-mini`)
+- [x] Workload-local Function App plan (`asp-ht-dvob-p-cin-01`, Consumption Y1)
 - [x] Python Function App (`func-ht-dvob-p-cin-01`, Python 3.11)
 - [x] System-Assigned Managed Identity + RBAC role assignment
 - [x] APIM Backend Registration (`openai-backend-dvob`)

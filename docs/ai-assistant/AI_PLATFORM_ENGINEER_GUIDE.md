@@ -93,7 +93,7 @@ The AI Assistant should guide the learner step-by-step through these 6 practical
 ### Module 4: Azure AI Foundry & Vector Search Infrastructure
 * **Goal**: Provision Azure AI Services, OpenAI endpoints, and AI Search on free/low-cost SKUs.
 * **Key Tasks**:
-  1. Provision Azure OpenAI Service Account on Pay-As-You-Go tier in supported regions (e.g., East US / Sweden Central / Central India).
+  1. Provision Azure OpenAI Service Account on Pay-As-You-Go tier in a model/SKU-supported region. In this repo, `gpt-4o-mini` uses South India because Central India rejected OpenAI `S0`.
   2. Deploy `text-embedding-3-small` and `gpt-4o-mini` deployments with strict TPM quota caps.
   3. Deploy Azure AI Search on `Free` (F1) SKU.
   4. Configure System-Assigned Managed Identity on App/Functions to access OpenAI via RBAC (`Cognitive Services OpenAI User`).

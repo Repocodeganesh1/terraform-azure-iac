@@ -184,5 +184,9 @@ module "shared_to_hub_peering" {
   vnet_2_name = data.azurerm_virtual_network.hub.name
   vnet_2_rg   = data.azurerm_resource_group.hub.name
   vnet_2_id   = data.azurerm_virtual_network.hub.id
+
+  depends_on = [
+    module.shared_vnet
+  ]
 }
 

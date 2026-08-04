@@ -31,6 +31,7 @@ module "function_app" {
   location                 = var.location
   parent_id                = var.resource_group_id
   service_plan_resource_id = var.service_plan_id
+  kind                     = "functionapp"
 
   # Application Insights – passed from the inline resource above
   application_insights_key               = azurerm_application_insights.this.instrumentation_key
@@ -49,6 +50,8 @@ module "function_app" {
 
   # Python runtime stack
   site_config = {
+    always_on = false
+
     application_stack = {
       python = {
         python_version = var.python_version

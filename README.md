@@ -2,6 +2,8 @@
 
 An enterprise-grade, cost-optimized **Azure Landing Zone** built with **Terraform** and **Azure DevOps Pipelines**, specifically tailored to support **Azure AI & ML Workloads** (Azure OpenAI, AI Foundry, AI Search, Cognitive Services).
 
+For a compact, current handoff document, start with [`docs/PROJECT_CONTEXT.md`](docs/PROJECT_CONTEXT.md). It merges the repo goal, current workload goal, subscription map, deployment order, and latest troubleshooting notes.
+
 ---
 
 ## 🎯 Project Objectives

@@ -3,6 +3,8 @@
 ## 🎯 Repository Purpose & Intent
 This repository provisions an enterprise-grade **Azure AI Landing Zone** following the **Microsoft Cloud Adoption Framework (CAF)** pattern using **Terraform** and **Azure DevOps CI/CD Pipelines**.
 
+For compact current context, read `docs/PROJECT_CONTEXT.md` first. It preserves the repository goal, current `workloads/ai-assistant` deployment goal, subscription map, recent Terraform fixes, and known apply risks.
+
 ---
 
 ## 🔑 Subscriptions & Federated Service Connections (WIF)
