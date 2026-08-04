@@ -55,3 +55,14 @@ output "cosmos_db_endpoint" {
   value       = module.cosmos_db.endpoint
 }
 
+output "search_service_name" {
+  description = "Name of the Azure AI Search Service."
+  value       = module.search_service.name
+}
+
+output "search_service_endpoint" {
+  description = "Endpoint URL of the Azure AI Search Service."
+  value       = module.search_service.endpoint
+}
+
+

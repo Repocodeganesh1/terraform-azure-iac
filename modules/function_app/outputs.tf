@@ -25,6 +25,11 @@ output "storage_account_name" {
   value       = azurerm_storage_account.this.name
 }
 
+output "storage_account_id" {
+  description = "Backend Storage Account ID."
+  value       = azurerm_storage_account.this.id
+}
+
 output "app_insights_instrumentation_key" {
   description = "Application Insights Instrumentation Key."
   value       = azurerm_application_insights.this.instrumentation_key

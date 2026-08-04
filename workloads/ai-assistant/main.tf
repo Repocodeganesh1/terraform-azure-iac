@@ -119,6 +119,17 @@ module "aiast_cosmos_name" {
   instance       = var.instance
 }
 
+module "aiast_srch_name" {
+  source = "../../modules/naming"
+
+  resource_type  = "srch"
+  project        = var.project
+  workload       = var.workload
+  environment    = var.environment
+  location_short = var.location_short
+  instance       = var.instance
+}
+
 # Resource Group for DevOnboard AI workload
 resource "azurerm_resource_group" "ai_assistant" {
   name     = module.aiast_rg_name.name
@@ -206,6 +217,18 @@ module "cosmos_db" {
   tags = local.tags
 }
 
+# Azure AI Search (Free Tier for RAG vector search & indexing)
+module "search_service" {
+  source = "../../modules/search_service"
+
+  name                = module.aiast_srch_name.name
+  location            = azurerm_resource_group.ai_assistant.location
+  resource_group_name = azurerm_resource_group.ai_assistant.name
+  sku                 = "free"
+
+  tags = local.tags
+}
+
 # App Service Plan for the workload Function App.
 module "aiast_service_plan" {
   source = "../../modules/service_plan"
@@ -234,27 +257,59 @@ module "function_app" {
   identity_type              = "SystemAssigned"
 
   app_settings = {
-    "AZURE_OPENAI_ENDPOINT" = module.openai.endpoint
-    "AZURE_OPENAI_MODEL"    = "gpt-4o-mini"
-    "COSMOS_DB_ENDPOINT"    = module.cosmos_db.endpoint
-    "COSMOS_DB_DATABASE"    = module.cosmos_db.database_name
-    "COSMOS_DB_CONTAINER"   = module.cosmos_db.container_name
-    "APP_NAME"              = "DevOnboard AI"
-    "APP_VERSION"           = "1.0.0"
+    "AZURE_OPENAI_ENDPOINT"   = module.openai.endpoint
+    "AZURE_OPENAI_MODEL"      = "gpt-4o-mini"
+    "COSMOS_DB_ENDPOINT"      = module.cosmos_db.endpoint
+    "COSMOS_DB_DATABASE"      = module.cosmos_db.database_name
+    "COSMOS_DB_CONTAINER"     = module.cosmos_db.container_name
+    "AZURE_SEARCH_ENDPOINT"   = module.search_service.endpoint
+    "RAG_DOCUMENTS_CONTAINER" = "documents"
+    "APP_NAME"                = "DevOnboard AI"
+    "APP_VERSION"             = "1.0.0"
   }
 
   tags = local.tags
 }
 
+# Storage Container for RAG Documents (PDFs, Word docs, text files)
+resource "azurerm_storage_container" "rag_documents" {
+  name                  = "documents"
+  storage_account_id    = module.function_app.storage_account_id
+  container_access_type = "private"
+
+  depends_on = [
+    module.function_app
+  ]
+}
+
+# Wait 10s for System-Assigned Managed Identity propagation in Entra ID (prevents PrincipalNotFound errors)
+resource "time_sleep" "wait_for_func_identity" {
+  create_duration = "10s"
+
+  depends_on = [
+    module.function_app
+  ]
+}
+
+# Role Assignment: Grant "Storage Blob Data Contributor" to Function App System-Assigned Identity
+resource "azurerm_role_assignment" "func_blob_contributor" {
+  scope                = module.function_app.storage_account_id
+  role_definition_name = "Storage Blob Data Contributor"
+  principal_id         = module.function_app.principal_id
+
+  depends_on = [
+    time_sleep.wait_for_func_identity
+  ]
+}
+
 # Role Assignment: Grant "Cognitive Services OpenAI User" to Function App System-Assigned Identity
-# Solution 2: Explicit depends_on handles ordering
 resource "azurerm_role_assignment" "func_openai_user" {
   scope                = module.openai.id
   role_definition_name = "Cognitive Services OpenAI User"
   principal_id         = module.function_app.principal_id
 
   depends_on = [
-    module.function_app,
+    time_sleep.wait_for_func_identity,
     module.openai
   ]
 }
@@ -269,4 +324,8 @@ resource "azurerm_api_management_backend" "openai_backend" {
   url                 = "${module.openai.endpoint}openai"
 
   description = "APIM backend for Azure OpenAI (gpt-4o-mini)"
+
+  depends_on = [
+    module.openai
+  ]
 }

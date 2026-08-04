@@ -98,6 +98,8 @@ Private networking direction:
 - OpenAI account: named with `openai_location_short`, currently Central India (`oai-ht-dvob-p-cin-01`)
 - Model deployment: `gpt-4o-mini`, version `2024-07-18`, SKU `GlobalStandard`, capacity `10`
 - Cosmos DB (NoSQL): `cosmos-ht-dvob-p-cin-01` (Free Tier: 1,000 RU/s + 25 GB storage free)
+- AI Search: `srch-ht-dvob-p-cin-01` (Free Tier: 3 indexes, 50 MB vector/document storage free)
+- RAG Document Storage: `documents` private blob container in `sthtdvobpcin01` + `Storage Blob Data Contributor` RBAC
 - APIM backend: `openai-backend-dvob` in Shared-services
 
 The Function App wrapper uses Azure Verified Module `Azure/avm-res-web-site/azurerm` and must set `kind = "functionapp"`.
@@ -107,6 +109,8 @@ The Function App wrapper uses Azure Verified Module `Azure/avm-res-web-site/azur
 These fixes address Azure DevOps Terraform plan/apply failures seen on August 4, 2026:
 - Root outputs that propagate AVM sensitive values are explicitly marked `sensitive = true`.
 - Function App wrapper outputs use AVM outputs like `name`, `resource_uri`, and `system_assigned_mi_principal_id` rather than assuming raw ARM output shape.
+- Added `time_sleep.wait_for_func_identity` (10s delay) before RBAC role assignments to eliminate Microsoft Entra ID `PrincipalNotFound` propagation race conditions.
+- Added explicit `depends_on` on storage container creation and APIM backend registration.
 - The workload no longer looks up `asp-ht-ss-p-cin-01` in Shared-services for the Function App.
 - The workload creates its own App Service Plan in `Apps-prod` using SKU `Y1`.
 - Azure OpenAI moved from `centralindia` to `southindia`.
