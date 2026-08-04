@@ -1,21 +1,23 @@
 output "id" {
   description = "Resource ID of the Linux Function App."
   value       = module.function_app.resource_id
+  sensitive   = true
 }
 
 output "name" {
   description = "Name of the Linux Function App."
-  value       = module.function_app.resource.name
+  value       = module.function_app.name
 }
 
 output "default_hostname" {
   description = "Default hostname of the Function App."
-  value       = module.function_app.resource.properties.defaultHostName
+  value       = module.function_app.resource_uri
 }
 
 output "principal_id" {
   description = "System-Assigned Managed Identity Principal ID (if enabled)."
-  value       = var.identity_type == "SystemAssigned" || var.identity_type == "SystemAssigned, UserAssigned" ? module.function_app.resource.identity.principalId : null
+  value       = var.identity_type == "SystemAssigned" || var.identity_type == "SystemAssigned, UserAssigned" ? module.function_app.system_assigned_mi_principal_id : null
+  sensitive   = true
 }
 
 output "storage_account_name" {

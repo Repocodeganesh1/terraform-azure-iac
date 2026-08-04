@@ -167,7 +167,7 @@ module "openai" {
       model_name    = "gpt-4o-mini"
       model_version = "2024-07-18"
       sku_name      = "Standard"
-      sku_capacity  = 10  # 10k tokens/min cap – keeps cost near $0 idle
+      sku_capacity  = 10 # 10k tokens/min cap – keeps cost near $0 idle
     }
   }
 
